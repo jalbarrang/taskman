@@ -1,7 +1,7 @@
 {
   "name": "@dreki-gg/taskman",
   "version": "0.4.0",
-  "description": "Standalone task-management engine + CLI over a .plans/ JSONL ledger — the plan-mode core, usable from any Node harness",
+  "description": "Standalone task-management engine + CLI over a .plans/ JSONL ledger \u2014 the plan-mode core, usable from any Node harness",
   "keywords": [
     "tasks",
     "planning",
@@ -12,8 +12,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dreki-gg/pi-extensions.git",
-    "directory": "packages/taskman"
+    "url": "git+https://github.com/jalbarrang/taskman.git"
   },
   "type": "module",
   "main": "./dist/index.mjs",
