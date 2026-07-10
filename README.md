@@ -92,3 +92,7 @@ npx @tanstack/intent@latest install
 ## License
 
 MIT
+
+## Releasing
+
+No changesets here — plain npm: `npm version minor && npm publish && git push --follow-tags`. Requires npm 2FA.
