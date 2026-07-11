@@ -23,18 +23,18 @@ afterEach(async () => {
 
 describe('handoff', () => {
   test('save then load round-trips', async () => {
-    await run(saveHandoff('.plans/p', '# Handoff body'));
-    expect(await run(loadHandoff('.plans/p'))).toBe('# Handoff body');
+    await run(saveHandoff('p', '# Handoff body'));
+    expect(await run(loadHandoff('p'))).toBe('# Handoff body');
   });
 
   test('load returns undefined when missing', async () => {
-    expect(await run(loadHandoff('.plans/none'))).toBeUndefined();
+    expect(await run(loadHandoff('none'))).toBeUndefined();
   });
 });
 
 describe('initiative doc', () => {
-  test('writes INITIATIVE.md', async () => {
-    await run(saveInitiative('.plans/init', '# Overview'));
-    expect(await readFile('.plans/init/INITIATIVE.md', 'utf-8')).toBe('# Overview');
+  test('writes INITIATIVE.md under the default ledger root', async () => {
+    await run(saveInitiative('init', '# Overview'));
+    expect(await readFile('.taskman/plans/init/INITIATIVE.md', 'utf-8')).toBe('# Overview');
   });
 });

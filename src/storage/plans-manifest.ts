@@ -5,8 +5,10 @@ import { decodePlanManifestEntry } from '../schema.js';
 import type { PlanStatus } from '../types.js';
 import { withFileLock } from './file-lock.js';
 
-const MANIFEST_DIR = '.plans';
-const MANIFEST_PATH = '.plans/plans.jsonl';
+// Paths are ledger-relative; the ledger folder itself is the FileSystem root
+// (see makePlanRuntime). '.' means "ensure the ledger root exists".
+const MANIFEST_DIR = '.';
+const MANIFEST_PATH = 'plans.jsonl';
 
 export interface PlanManifestEntry {
   _type: 'plan';

@@ -44,7 +44,7 @@ const STATUS_ICON: Record<InitiativeStatus, string> = {
 export function formatInitiativeList(items: InitiativeListItem[], filter: StatusFilter): string {
   if (items.length === 0) {
     return filter === 'all'
-      ? 'No initiatives found in .plans/initiatives.jsonl'
+      ? 'No initiatives found in the ledger (initiatives.jsonl)'
       : `No initiatives with status "${filter}"`;
   }
   const header =

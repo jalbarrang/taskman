@@ -23,7 +23,9 @@ export function buildProgram(): Command {
   const program = new Command();
   program
     .name('taskman')
-    .description('Task-management engine over a .plans/ JSONL ledger')
+    .description(
+      'Task-management engine over a JSONL plan ledger (default .taskman/plans/, configurable via .taskmanrc)',
+    )
     .version(packageVersion());
   registerQueryCommands(program);
   registerMutateCommands(program);

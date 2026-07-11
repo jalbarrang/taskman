@@ -31,22 +31,22 @@ afterEach(async () => {
 });
 
 describe('root-aware filesystem runtime', () => {
-  test('makePlanRuntime(root) relocates the registry under root, not cwd', async () => {
+  test('makePlanRuntime(root) treats root as the ledger folder itself', async () => {
     const runInTarget = makePlanRuntime(targetDir);
     await runInTarget(writePlansManifest([entry]));
 
-    const written = await readFile(join(targetDir, '.plans', 'plans.jsonl'), 'utf-8');
+    const written = await readFile(join(targetDir, 'plans.jsonl'), 'utf-8');
     expect(written).toContain('gap-fix');
 
     // Nothing leaked into the current working directory.
-    await expect(readFile(join(cwdDir, '.plans', 'plans.jsonl'), 'utf-8')).rejects.toThrow();
+    await expect(readFile(join(cwdDir, 'plans.jsonl'), 'utf-8')).rejects.toThrow();
   });
 
-  test('makePlanRuntime() (no root) writes under the current working directory', async () => {
+  test('makePlanRuntime() (no root) writes under <cwd>/.taskman/plans', async () => {
     const run = makePlanRuntime();
     await run(writePlansManifest([entry]));
 
-    const written = await readFile(join(cwdDir, '.plans', 'plans.jsonl'), 'utf-8');
+    const written = await readFile(join(cwdDir, '.taskman', 'plans', 'plans.jsonl'), 'utf-8');
     expect(written).toContain('gap-fix');
   });
 
@@ -58,7 +58,7 @@ describe('root-aware filesystem runtime', () => {
     // writePlansManifest uses relative paths; this assertion just guards that
     // resolve() leaves the root mechanism well-defined for relative inputs.
     await runElsewhere(writePlansManifest([entry]));
-    const written = await readFile(join(cwdDir, '.plans', 'plans.jsonl'), 'utf-8');
+    const written = await readFile(join(cwdDir, 'plans.jsonl'), 'utf-8');
     expect(written).toContain('gap-fix');
   });
 });

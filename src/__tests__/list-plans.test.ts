@@ -204,7 +204,7 @@ describe('loadPlanListItems', () => {
   test('loads plans with task counts', async () => {
     await runPlanIO(upsertPlanEntry('alpha', { status: 'in-progress', title: 'Alpha' }));
     await runPlanIO(
-      writeTasksJsonl('.plans/alpha', meta('alpha'), [
+      writeTasksJsonl('alpha', meta('alpha'), [
         task('t-001', 'done'),
         task('t-002', 'pending'),
         task('t-003', 'pending'),
@@ -231,9 +231,9 @@ describe('loadPlanListItems', () => {
   test('loads multiple plans', async () => {
     await runPlanIO(upsertPlanEntry('alpha', { status: 'in-progress', title: 'Alpha' }));
     await runPlanIO(upsertPlanEntry('beta', { status: 'done', title: 'Beta' }));
-    await runPlanIO(writeTasksJsonl('.plans/alpha', meta('alpha'), [task('t-001', 'pending')]));
+    await runPlanIO(writeTasksJsonl('alpha', meta('alpha'), [task('t-001', 'pending')]));
     await runPlanIO(
-      writeTasksJsonl('.plans/beta', meta('beta'), [task('t-001', 'done'), task('t-002', 'done')]),
+      writeTasksJsonl('beta', meta('beta'), [task('t-001', 'done'), task('t-002', 'done')]),
     );
 
     const items = await runPlanIO(loadPlanListItems());

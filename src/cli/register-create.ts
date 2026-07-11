@@ -37,7 +37,7 @@ export function registerCreateCommands(program: Command): void {
   program
     .command('revise-plan')
     .description('Rewrite an existing plan in place; omitted fields preserved')
-    .requiredOption('--plan <name>', 'plan name (or .plans/<name>) to revise')
+    .requiredOption('--plan <name>', 'plan name (any directory prefix is stripped) to revise')
     .option('--title <title>', 'new human-readable plan title')
     .option('--handoff <text>', 'new HANDOFF.md markdown (inline)')
     .option('--handoff-file <path>', 'read new HANDOFF.md from a file ("-" for stdin)')

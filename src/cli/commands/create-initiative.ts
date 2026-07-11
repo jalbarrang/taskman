@@ -12,7 +12,7 @@ import {
   readInitiativesManifest,
   upsertInitiativeEntry,
 } from '../../storage/initiatives-manifest.js';
-import { runPlanIO, CliError } from '../runtime.js';
+import { runPlanIO, displayPath, CliError } from '../runtime.js';
 import { resolveContent } from '../input.js';
 import { emit } from '../format.js';
 
@@ -34,7 +34,8 @@ export async function createInitiativeCommand(opts: {
   }
 
   const name = opts.name;
-  const initiativeDir = `.plans/${name}`;
+  // Ledger-relative; the runtime roots it at the resolved plans root.
+  const initiativeDir = name;
   const overview = await resolveContent(opts.overview, opts.overviewFile, 'overview');
 
   const existing = await runPlanIO(readInitiativesManifest());
@@ -53,7 +54,7 @@ export async function createInitiativeCommand(opts: {
 
   emit(
     Boolean(opts.json),
-    { name, title: opts.title, initiative_dir: initiativeDir },
-    `Initiative "${opts.title}" created in ${initiativeDir}. Submit member plans with --initiative ${name}.`,
+    { name, title: opts.title, initiative_dir: displayPath(name) },
+    `Initiative "${opts.title}" created in ${displayPath(name)}. Submit member plans with --initiative ${name}.`,
   );
 }

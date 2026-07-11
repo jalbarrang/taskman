@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0
+
+- **BREAKING: the default ledger moved from `.plans/` to `.taskman/plans/`, with no fallback.** taskman no longer reads or writes `.plans/` unless you point it there explicitly, so it stops colliding with other workflows that use `.plans/` differently. Migrate an existing ledger with `mkdir -p .taskman && git mv .plans .taskman/plans` (plain `mv` if the ledger is gitignored), or keep the old location by adding a `.taskmanrc` with `{"plans-root": ".plans"}`.
+- `.taskmanrc` support — a JSON file in the working directory with a `"plans-root"` property whose value IS the ledger folder (it contains `plans.jsonl` directly). Resolution is cwd-only by design: no walk-up, no env var, so agents can always predict which folder a command targets. A malformed file or non-string `plans-root` exits 1 with a clear message.
+- New `taskman root` command (supports `--json`) prints the resolved plans root and its source (`default` or `taskmanrc`), so humans and agents can discover where the ledger lives.
+- **BREAKING (library): `makePlanRuntime(root)` / `makeRuntimeLayer(root)` now take the ledger folder itself** (default `.taskman/plans`), not a working directory containing `.plans/`. Storage programs use ledger-relative paths (`plans.jsonl`, `<plan>/tasks.jsonl`). The library never reads `.taskmanrc` implicitly — call the new exported `resolveLedgerRoot(cwd?)` and pass its `root` to `makePlanRuntime` to opt in.
+- `--plan` hints now accept any directory prefix (`.taskman/plans/my-plan`, `some/root/my-plan`) — normalization takes the last path segment.
+
 ## 0.5.0
 
 - `create-initiative` — create an initiative (INITIATIVE.md + registry entry) from any harness, matching pi plan-mode ledger shape

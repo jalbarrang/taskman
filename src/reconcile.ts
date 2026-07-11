@@ -33,7 +33,8 @@ import { readTasksJsonl } from './storage/task-storage.js';
 import { isPlanFinalizable } from './task-status.js';
 import type { PlanStatus } from './types.js';
 
-const PLANS_DIR = '.plans';
+// Ledger root itself; plan dirs are its immediate children.
+const PLANS_DIR = '.';
 
 export interface PlanDriftRow {
   name: string;
@@ -85,7 +86,7 @@ export function collectPlanDrift(): Effect.Effect<PlanDriftRow[], CollectError, 
 
     for (const entry of manifest) {
       seen.add(entry.name);
-      const snapshot = yield* readTasksJsonl(`${PLANS_DIR}/${entry.name}`);
+      const snapshot = yield* readTasksJsonl(entry.name);
       if (!snapshot) {
         rows.push({
           name: entry.name,
@@ -126,7 +127,7 @@ export function collectPlanDrift(): Effect.Effect<PlanDriftRow[], CollectError, 
     // Orphan task dirs: have tasks.jsonl but no registry entry.
     for (const name of taskDirs) {
       if (seen.has(name)) continue;
-      const snapshot = yield* readTasksJsonl(`${PLANS_DIR}/${name}`);
+      const snapshot = yield* readTasksJsonl(name);
       if (!snapshot) continue;
       const total = snapshot.tasks.length;
       const resolved = snapshot.tasks.filter(

@@ -1,6 +1,6 @@
 /**
- * `.plans/initiatives.jsonl` registry — the initiative-level sibling of
- * `plans-manifest.ts`.
+ * `initiatives.jsonl` registry (ledger-relative) — the initiative-level sibling
+ * of `plans-manifest.ts`.
  *
  * An initiative groups multiple plans. Its `status` is a PROJECTION of its
  * member plans' statuses (see `reconcileInitiativeStatus` in `../initiative.ts`
@@ -20,8 +20,9 @@ import { decodeInitiativeManifestEntry } from '../schema.js';
 import type { InitiativeStatus } from '../types.js';
 import { withFileLock } from './file-lock.js';
 
-const MANIFEST_DIR = '.plans';
-const MANIFEST_PATH = '.plans/initiatives.jsonl';
+// Ledger-relative, like plans-manifest.ts.
+const MANIFEST_DIR = '.';
+const MANIFEST_PATH = 'initiatives.jsonl';
 
 export interface InitiativeManifestEntry {
   _type: 'initiative';

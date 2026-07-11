@@ -7,21 +7,24 @@
  */
 
 import { Effect, Layer } from 'effect';
-import { FileSystem, makeNodeFileSystemService, nodeFileSystemService } from './filesystem.js';
+import { DEFAULT_PLANS_ROOT } from '../config.js';
+import { FileSystem, makeNodeFileSystemService } from './filesystem.js';
 
 /**
- * Build the live filesystem layer. Pass `root` to relocate the whole `.plans/`
- * registry under another working directory; omit it for the default (relative
- * paths resolve against the current working directory).
+ * Build the live filesystem layer. `root` is the ledger folder itself — the
+ * directory that contains `plans.jsonl` directly (default `.taskman/plans`,
+ * resolved against the working directory when relative). Storage programs use
+ * ledger-relative paths, so the root places the whole registry.
  */
-export function makeRuntimeLayer(root?: string): Layer.Layer<FileSystem> {
-  const service = root === undefined ? nodeFileSystemService : makeNodeFileSystemService(root);
-  return Layer.succeed(FileSystem, service);
+export function makeRuntimeLayer(root: string = DEFAULT_PLANS_ROOT): Layer.Layer<FileSystem> {
+  return Layer.succeed(FileSystem, makeNodeFileSystemService(root));
 }
 
 /**
  * Build a bridge that runs storage programs against the live filesystem layer.
- * Pass `root` to target an external working directory's `.plans/` registry.
+ * `root` is the ledger folder (see `makeRuntimeLayer`); pass the result of
+ * `resolveLedgerRoot()` to honour a `.taskmanrc` — the library never reads
+ * config implicitly.
  */
 export function makePlanRuntime(root?: string) {
   const layer = makeRuntimeLayer(root);

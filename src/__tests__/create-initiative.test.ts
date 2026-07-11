@@ -47,10 +47,12 @@ describe('create-initiative', () => {
     );
     expect(JSON.parse(out)).toMatchObject({
       name: 'auth-overhaul',
-      initiative_dir: '.plans/auth-overhaul',
+      initiative_dir: join('.taskman', 'plans', 'auth-overhaul'),
     });
-    expect(await readFile('.plans/auth-overhaul/INITIATIVE.md', 'utf8')).toContain('Ship auth.');
-    const entry = JSON.parse((await readFile('.plans/initiatives.jsonl', 'utf8')).trim());
+    expect(await readFile('.taskman/plans/auth-overhaul/INITIATIVE.md', 'utf8')).toContain(
+      'Ship auth.',
+    );
+    const entry = JSON.parse((await readFile('.taskman/plans/initiatives.jsonl', 'utf8')).trim());
     expect(entry).toMatchObject({
       _type: 'initiative',
       name: 'auth-overhaul',
@@ -78,7 +80,7 @@ describe('create-initiative', () => {
     expect(JSON.parse(out)).toMatchObject({
       name: 'json-init',
       title: 'JSON Init',
-      initiative_dir: '.plans/json-init',
+      initiative_dir: join('.taskman', 'plans', 'json-init'),
     });
   });
 
@@ -92,6 +94,8 @@ describe('create-initiative', () => {
     } finally {
       Object.defineProperty(process, 'stdin', { value: original, configurable: true });
     }
-    expect(await readFile('.plans/from-stdin/INITIATIVE.md', 'utf8')).toContain('From stdin');
+    expect(await readFile('.taskman/plans/from-stdin/INITIATIVE.md', 'utf8')).toContain(
+      'From stdin',
+    );
   });
 });

@@ -1,7 +1,8 @@
 /**
  * @dreki-gg/taskman — the plan-mode task-management engine.
  *
- * A standalone, pi-independent library over a `.plans/` JSONL ledger: plan +
+ * A standalone, pi-independent library over a JSONL plan ledger (default
+ * `.taskman/plans/`, configurable via `.taskmanrc`): plan +
  * initiative registries, task snapshots, status projection/reconcile, and the
  * stateless resolution + composite write flows that the pi extension and the
  * `taskman` CLI both build on.
@@ -23,6 +24,14 @@ export * from './errors.js';
 
 // Schema
 export * from './schema.js';
+
+// Ledger-root config (.taskmanrc)
+export {
+  DEFAULT_PLANS_ROOT,
+  TASKMANRC_FILENAME,
+  resolveLedgerRoot,
+  type ResolvedLedgerRoot,
+} from './config.js';
 
 // Effect runtime / filesystem seam
 export {

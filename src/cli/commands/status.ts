@@ -4,13 +4,13 @@
 
 import { loadPlanData } from '../../resolve.js';
 import type { TaskStatus } from '../../types.js';
-import { runPlanIO, resolvePlanDir, CliError } from '../runtime.js';
+import { runPlanIO, resolvePlanDir, displayPath, CliError } from '../runtime.js';
 import { STATUS_GLYPH, emit } from '../format.js';
 
 export async function statusCommand(opts: { plan?: string; json?: boolean }): Promise<void> {
-  const { planDir } = await resolvePlanDir(opts.plan);
+  const { planName, planDir } = await resolvePlanDir(opts.plan);
   const plan = await runPlanIO(loadPlanData(planDir));
-  if (!plan) throw new CliError(`No tasks.jsonl found in ${planDir}.`);
+  if (!plan) throw new CliError(`No tasks.jsonl found in ${displayPath(planName)}.`);
 
   const counts: Record<TaskStatus, number> = {
     done: 0,

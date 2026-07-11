@@ -13,7 +13,9 @@ export async function initiativeStatusCommand(
   opts: { json?: boolean },
 ): Promise<void> {
   const initiatives = await runPlanIO(readInitiativesManifest());
-  if (initiatives.length === 0) throw new CliError('No initiatives in .plans/initiatives.jsonl.');
+  if (initiatives.length === 0) {
+    throw new CliError('No initiatives in the ledger (initiatives.jsonl).');
+  }
 
   let target = name;
   if (!target) {

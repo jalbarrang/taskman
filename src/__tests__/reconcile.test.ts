@@ -51,7 +51,7 @@ afterEach(async () => {
 
 describe('collectPlanDrift', () => {
   test('flags a fully-done plan still registered in-progress as status drift', async () => {
-    await runPlanIO(writeTasksJsonl('.plans/alpha', meta('alpha'), [task('t-001', 'done')]));
+    await runPlanIO(writeTasksJsonl('alpha', meta('alpha'), [task('t-001', 'done')]));
     await runPlanIO(upsertPlanEntry('alpha', { status: 'in-progress', title: 'Title alpha' }));
 
     const rows = await runPlanIO(collectPlanDrift());
@@ -63,7 +63,7 @@ describe('collectPlanDrift', () => {
   });
 
   test('reports an in-sync plan with no drift', async () => {
-    await runPlanIO(writeTasksJsonl('.plans/beta', meta('beta'), [task('t-001', 'pending')]));
+    await runPlanIO(writeTasksJsonl('beta', meta('beta'), [task('t-001', 'pending')]));
     await runPlanIO(upsertPlanEntry('beta', { status: 'in-progress', title: 'Title beta' }));
 
     const rows = await runPlanIO(collectPlanDrift());
@@ -79,14 +79,14 @@ describe('collectPlanDrift', () => {
   });
 
   test('flags orphan task dirs (tasks.jsonl, no registry entry)', async () => {
-    await runPlanIO(writeTasksJsonl('.plans/orphan', meta('orphan'), [task('t-001', 'done')]));
+    await runPlanIO(writeTasksJsonl('orphan', meta('orphan'), [task('t-001', 'done')]));
     const rows = await runPlanIO(collectPlanDrift());
     const orphan = rows.find((r) => r.name === 'orphan')!;
     expect(orphan.drift).toBe('orphan');
   });
 
   test('never flags a manually-closed terminal status as drift', async () => {
-    await runPlanIO(writeTasksJsonl('.plans/sup', meta('sup'), [task('t-001', 'pending')]));
+    await runPlanIO(writeTasksJsonl('sup', meta('sup'), [task('t-001', 'pending')]));
     await runPlanIO(
       writePlansManifest([
         {
@@ -107,7 +107,7 @@ describe('collectPlanDrift', () => {
 
 describe('applyReconcile', () => {
   test('repairs only status drift and projects derived status into the registry', async () => {
-    await runPlanIO(writeTasksJsonl('.plans/alpha', meta('alpha'), [task('t-001', 'done')]));
+    await runPlanIO(writeTasksJsonl('alpha', meta('alpha'), [task('t-001', 'done')]));
     await runPlanIO(upsertPlanEntry('alpha', { status: 'in-progress', title: 'Title alpha' }));
 
     const rows = await runPlanIO(collectPlanDrift());
@@ -119,7 +119,7 @@ describe('applyReconcile', () => {
   });
 
   test('classifies an upgrade (in-progress registry, done tasks) as direction:upgrade', async () => {
-    await runPlanIO(writeTasksJsonl('.plans/up', meta('up'), [task('t-001', 'done')]));
+    await runPlanIO(writeTasksJsonl('up', meta('up'), [task('t-001', 'done')]));
     await runPlanIO(upsertPlanEntry('up', { status: 'in-progress', title: 'Up' }));
     const rows = await runPlanIO(collectPlanDrift());
     expect(rows.find((r) => r.name === 'up')!.direction).toBe('upgrade');
@@ -127,7 +127,7 @@ describe('applyReconcile', () => {
 
   test('a done plan with incomplete tasks is flagged downgrade and NOT auto-repaired', async () => {
     // Work merged but tasks never marked done: registry done, tasks in-progress.
-    await runPlanIO(writeTasksJsonl('.plans/merged', meta('merged'), [task('t-001', 'pending')]));
+    await runPlanIO(writeTasksJsonl('merged', meta('merged'), [task('t-001', 'pending')]));
     await runPlanIO(
       writePlansManifest([
         {

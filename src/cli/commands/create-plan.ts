@@ -15,7 +15,7 @@ import { readInitiativesManifest } from '../../storage/initiatives-manifest.js';
 import { reconcileInitiativeForPlan } from '../../initiative.js';
 import { nextTaskId, toKebabCase } from '../../ids.js';
 import type { TaskMeta, TaskRecord } from '../../types.js';
-import { runPlanIO, CliError } from '../runtime.js';
+import { runPlanIO, displayPath, CliError } from '../runtime.js';
 import { resolveContent } from '../input.js';
 import { emit } from '../format.js';
 
@@ -86,7 +86,8 @@ export async function createPlanCommand(opts: {
   if (!opts.title) throw new CliError('--title is required.');
 
   const planName = toKebabCase(opts.name);
-  const planDir = `.plans/${planName}`;
+  // Ledger-relative; the runtime roots it at the resolved plans root.
+  const planDir = planName;
   const initiative = opts.initiative ? toKebabCase(opts.initiative) : undefined;
   const dependsOnPlans = opts.dependsOn
     ? opts.dependsOn
@@ -134,13 +135,13 @@ export async function createPlanCommand(opts: {
     Boolean(opts.json),
     {
       plan_name: planName,
-      plan_dir: planDir,
+      plan_dir: displayPath(planName),
       task_count: tasks.length,
       task_ids: tasks.map((t) => t.id),
       initiative: initiative ?? null,
       depends_on: dependsOnPlans ?? null,
       unknown_initiative: unknownInitiative,
     },
-    `Plan "${opts.title}" saved with ${tasks.length} tasks in ${planDir}.${linkSuffix}`,
+    `Plan "${opts.title}" saved with ${tasks.length} tasks in ${displayPath(planName)}.${linkSuffix}`,
   );
 }

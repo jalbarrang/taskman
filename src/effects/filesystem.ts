@@ -28,13 +28,12 @@ export class FileSystem extends Context.Tag('PlanMode/FileSystem')<
 
 /**
  * Build a node-backed filesystem service whose relative paths resolve against
- * `root`. All storage programs use relative `.plans/...` paths, so prefixing a
- * root relocates the entire plan registry coherently (manifests, plan dirs,
- * handoffs) to another working directory.
+ * `root` — the ledger folder itself. All storage programs use ledger-relative
+ * paths (`plans.jsonl`, `<plan>/tasks.jsonl`), so the root places the entire
+ * plan registry coherently (manifests, plan dirs, handoffs).
  *
- * `resolve(root, p)` is a no-op for already-absolute paths and reproduces the
- * default `process.cwd()` behaviour exactly when `root === process.cwd()`, so
- * the common (no-target) path is unchanged.
+ * `resolve(root, p)` is a no-op for already-absolute paths; a relative `root`
+ * resolves against `process.cwd()` at call time.
  */
 export function makeNodeFileSystemService(root: string): FileSystemService {
   const at = (path: string) => resolve(root, path);
@@ -79,8 +78,8 @@ export function makeNodeFileSystemService(root: string): FileSystemService {
 }
 
 /**
- * Default service: relative paths resolve against the current working directory
- * at call time. `resolve('.', p)` is equivalent to `resolve(process.cwd(), p)`,
- * so this matches the historical behaviour of passing raw relative paths to fs.
+ * Cwd-rooted service: relative paths resolve against the current working
+ * directory at call time. Kept for consumers that manage their own paths; the
+ * plan-runtime default is the ledger root (see `makeRuntimeLayer`).
  */
 export const nodeFileSystemService: FileSystemService = makeNodeFileSystemService('.');

@@ -1,5 +1,6 @@
 /**
- * `taskman` CLI — drive the `.plans/` task ledger from any Node harness.
+ * `taskman` CLI — drive the plan ledger (default `.taskman/plans/`,
+ * configurable via `.taskmanrc`) from any Node harness.
  *
  * Thin entry over Commander wiring in `cli/program.ts`. Human text by default;
  * `--json` for machines.

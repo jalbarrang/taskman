@@ -61,7 +61,7 @@ export function formatPlanList(
 ): string {
   if (plans.length === 0) {
     return filter === 'all'
-      ? 'No plans found in .plans/plans.jsonl'
+      ? 'No plans found in the ledger (plans.jsonl)'
       : `No plans with status "${filter}"`;
   }
 
@@ -96,8 +96,7 @@ export function loadPlanListItems(): Effect.Effect<PlanListItem[], never, FileSy
     const items: PlanListItem[] = [];
 
     for (const entry of manifest) {
-      const dir = `.plans/${entry.name}`;
-      const snapshot = yield* Effect.orElseSucceed(readTasksJsonl(dir), () => undefined);
+      const snapshot = yield* Effect.orElseSucceed(readTasksJsonl(entry.name), () => undefined);
       const totalTasks = snapshot?.tasks.length ?? 0;
       const doneTasks =
         snapshot?.tasks.filter((t) => t.status === 'done' || t.status === 'skipped').length ?? 0;

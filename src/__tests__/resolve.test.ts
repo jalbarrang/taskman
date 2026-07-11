@@ -32,7 +32,7 @@ const task = (id: string): TaskRecord => ({
 
 async function makePlan(name: string, status: 'in-progress' | 'done' = 'in-progress') {
   await run(upsertPlanEntry(name, { status, title: `Title ${name}` }));
-  await run(writeTasksJsonl(`.plans/${name}`, meta(name), [task('t-001')]));
+  await run(writeTasksJsonl(name, meta(name), [task('t-001')]));
 }
 
 beforeEach(async () => {
@@ -50,6 +50,14 @@ describe('normalizePlanName', () => {
   test('strips .plans/ prefix and trailing slash', () => {
     expect(normalizePlanName('.plans/my-plan/')).toBe('my-plan');
   });
+
+  test('strips the default ledger prefix', () => {
+    expect(normalizePlanName('.taskman/plans/my-plan')).toBe('my-plan');
+  });
+
+  test('strips any configured root prefix (basename semantics)', () => {
+    expect(normalizePlanName('some/dir/my-plan')).toBe('my-plan');
+  });
 });
 
 describe('resolvePlanByName', () => {
@@ -57,7 +65,7 @@ describe('resolvePlanByName', () => {
     await makePlan('only');
     const r = await run(resolvePlanByName());
     expect(r.planName).toBe('only');
-    expect(r.planDir).toBe('.plans/only');
+    expect(r.planDir).toBe('only');
   });
 
   test('ambiguous when multiple in-progress and no hint', async () => {
@@ -86,8 +94,8 @@ describe('resolvePlanByName', () => {
 describe('loadPlanData', () => {
   test('builds plan data including handoff', async () => {
     await makePlan('p');
-    await run(saveHandoff('.plans/p', '# Handoff'));
-    const data = await run(loadPlanData('.plans/p'));
+    await run(saveHandoff('p', '# Handoff'));
+    const data = await run(loadPlanData('p'));
     expect(data?.planName).toBe('p');
     expect(data?.title).toBe('Title p');
     expect(data?.handoff).toBe('# Handoff');
@@ -95,7 +103,7 @@ describe('loadPlanData', () => {
   });
 
   test('undefined when no tasks file', async () => {
-    const data = await run(loadPlanData('.plans/ghost'));
+    const data = await run(loadPlanData('ghost'));
     expect(data).toBeUndefined();
   });
 });

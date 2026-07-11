@@ -6,7 +6,7 @@
  */
 
 import { saveHandoff } from '../../storage/plan-storage.js';
-import { runPlanIO, resolvePlanDir } from '../runtime.js';
+import { runPlanIO, resolvePlanDir, displayPath } from '../runtime.js';
 import { resolveContent } from '../input.js';
 import { emit } from '../format.js';
 
@@ -20,7 +20,7 @@ export async function createHandoffCommand(
 
   emit(
     Boolean(opts.json),
-    { plan_name: planName, path: `${planDir}/HANDOFF.md`, bytes: Buffer.byteLength(markdown) },
+    { plan_name: planName, path: displayPath(planName, 'HANDOFF.md'), bytes: Buffer.byteLength(markdown) },
     `Wrote HANDOFF.md (${Buffer.byteLength(markdown)} bytes) for ${planName}.`,
   );
 }

@@ -1,15 +1,16 @@
 ---
 name: taskman/core
 description: >
-  Drive the taskman CLI and engine over a .plans/ JSONL ledger — plans,
-  initiatives, and tasks. Load when running `taskman` commands (create-plan,
-  create-handoff, status, list, update-task, add-task, reconcile, close),
-  tracking plan/task progress across sessions or harnesses, or calling
+  Drive the taskman CLI and engine over a JSONL plan ledger (default
+  .taskman/plans/, configurable via .taskmanrc) — plans, initiatives, and
+  tasks. Load when running `taskman` commands (create-plan, create-handoff,
+  status, list, update-task, add-task, reconcile, close, root), tracking
+  plan/task progress across sessions or harnesses, or calling
   @dreki-gg/taskman as a library. Covers the status-is-a-projection model,
-  stateless plan resolution, and reconcile.
+  stateless plan resolution, ledger-root discovery, and reconcile.
 type: core
 library: "@dreki-gg/taskman"
-library_version: "0.4.0"
+library_version: "0.6.0"
 sources:
   - "dreki-gg/pi-extensions:packages/taskman/README.md"
   - "dreki-gg/pi-extensions:packages/taskman/src/cli.ts"
@@ -18,9 +19,9 @@ sources:
 
 # taskman
 
-`taskman` manages plan/task state on disk under `.plans/` so planning agents
-keep durable progress across sessions and tools. It ships both a CLI (`taskman`)
-and a library (`@dreki-gg/taskman`).
+`taskman` manages plan/task state on disk under a plans root (default
+`.taskman/plans/`) so planning agents keep durable progress across sessions and
+tools. It ships both a CLI (`taskman`) and a library (`@dreki-gg/taskman`).
 
 The command and flag inventory is **not** reproduced here — it lives in
 `--help`, which is always current for the installed version:
@@ -35,12 +36,21 @@ three invariants that decide whether a command does what you expect.
 
 ## The ledger
 
-Everything is plain JSONL/Markdown under `.plans/` in the current directory:
+Everything is plain JSONL/Markdown under the plans root — `.taskman/plans/` in
+the current directory by default:
 
-- `.plans/plans.jsonl` — plan registry
-- `.plans/initiatives.jsonl` — initiative registry (initiatives group plans)
-- `.plans/<plan>/tasks.jsonl` — one plan's tasks (first line is metadata)
-- `.plans/<plan>/HANDOFF.md`, `.plans/<initiative>/INITIATIVE.md` — prose
+- `<root>/plans.jsonl` — plan registry
+- `<root>/initiatives.jsonl` — initiative registry (initiatives group plans)
+- `<root>/<plan>/tasks.jsonl` — one plan's tasks (first line is metadata)
+- `<root>/<plan>/HANDOFF.md`, `<root>/<initiative>/INITIATIVE.md` — prose
+
+### Discovering / configuring the root
+
+A `.taskmanrc` JSON file in the working directory relocates the ledger:
+`{"plans-root": "some/dir"}` means `some/dir/plans.jsonl` — the value IS the
+ledger folder. Resolution is cwd-only (no walk-up, no env var). Run
+`taskman root --json` to discover the resolved root
+(`{ plans_root, source, absolute }`) before assuming any path.
 
 ## Invariants (read before acting)
 
@@ -49,8 +59,8 @@ Everything is plain JSONL/Markdown under `.plans/` in the current directory:
    initiative becomes `done` when every member plan is terminal. `update-task`
    re-derives the registry automatically.
 2. **Plan resolution is stateless.** A command targets a plan via `--plan
-   <name>` (accepts `.plans/<name>`), else the *single* in-progress plan.
-   Ambiguous or missing → non-zero exit listing the candidates.
+   <name>` (any directory prefix is stripped), else the *single* in-progress
+   plan. Ambiguous or missing → non-zero exit listing the candidates.
 3. **Manual terminal statuses are never auto-reverted.** `reconcile` only moves
    `in-progress ⇄ done`; it never resurrects a `superseded`/`abandoned` plan or
    regresses a finished one.
@@ -95,9 +105,16 @@ taskman list --json     # array of plan items
 ### Library usage
 
 ```ts
-import { makePlanRuntime, resolvePlanByName, setTaskStatus } from '@dreki-gg/taskman';
+import {
+  makePlanRuntime,
+  resolveLedgerRoot,
+  resolvePlanByName,
+  setTaskStatus,
+} from '@dreki-gg/taskman';
 
-const run = makePlanRuntime(); // bridges Effect programs to the live filesystem
+// makePlanRuntime takes the ledger folder itself (default .taskman/plans);
+// pass resolveLedgerRoot().root to honour a .taskmanrc — never read implicitly.
+const run = makePlanRuntime(resolveLedgerRoot().root);
 const { planName, planDir, candidates } = await run(resolvePlanByName({ name: 'my-plan' }));
 if (!planDir) throw new Error(`Unresolved; candidates: ${candidates.join(', ')}`);
 await run(setTaskStatus(planDir, 't-001', 'done')); // also reconciles the registry

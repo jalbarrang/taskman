@@ -8,7 +8,7 @@
 
 import { toKebabCase } from '../../ids.js';
 import { loadPlanData } from '../../resolve.js';
-import { runPlanIO, resolvePlanDir, CliError } from '../runtime.js';
+import { runPlanIO, resolvePlanDir, displayPath, CliError } from '../runtime.js';
 import { emit } from '../format.js';
 import { persistRevisedPlan } from '../persist-revise.js';
 import {
@@ -35,7 +35,7 @@ export async function revisePlanCommand(opts: {
 
   const { planName, planDir } = await resolvePlanDir(opts.plan);
   const plan = await runPlanIO(loadPlanData(planDir));
-  if (!plan) throw new CliError(`No tasks.jsonl found in ${planDir}.`);
+  if (!plan) throw new CliError(`No tasks.jsonl found in ${displayPath(planName)}.`);
 
   const newTitle = opts.title ?? plan.title;
   const newHandoff =
@@ -69,12 +69,12 @@ export async function revisePlanCommand(opts: {
     Boolean(opts.json),
     {
       plan_name: planName,
-      plan_dir: planDir,
+      plan_dir: displayPath(planName),
       title: newTitle,
       task_count: tasks.length,
       task_ids: tasks.map((t) => t.id),
       changed,
     },
-    `Plan "${newTitle}" revised (${changed.join(', ') || 'no changes'}) in ${planDir}.`,
+    `Plan "${newTitle}" revised (${changed.join(', ') || 'no changes'}) in ${displayPath(planName)}.`,
   );
 }

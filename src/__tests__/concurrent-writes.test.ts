@@ -55,7 +55,7 @@ describe('concurrent registry writes', () => {
   });
 
   test('concurrent task updates to the same plan all persist', async () => {
-    const planDir = join('.plans', 'p');
+    const planDir = 'p';
     const meta: TaskMeta = {
       _type: 'meta',
       plan_name: 'p',

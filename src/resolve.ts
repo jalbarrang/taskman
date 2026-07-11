@@ -6,8 +6,8 @@
  * `name` hint, return the resolved plan name or the in-progress candidates so a
  * caller (CLI, automation) can act without any session.
  *
- * Order: explicit `name` hint → the single in-progress plan in
- * `.plans/plans.jsonl`. Ambiguous (multiple in-progress, no hint) returns
+ * Order: explicit `name` hint → the single in-progress plan in the ledger's
+ * `plans.jsonl`. Ambiguous (multiple in-progress, no hint) returns
  * `{ planName: undefined, candidates }`.
  */
 
@@ -22,7 +22,7 @@ import type { PlanData } from './types.js';
 export interface ResolvedPlanName {
   /** The resolved bare plan name, when resolvable. */
   planName?: string;
-  /** Plan directory (`.plans/<name>`) for the resolved plan. */
+  /** Ledger-relative plan directory (the bare `<name>`) for the resolved plan. */
   planDir?: string;
   /** In-progress plan names, surfaced when resolution was ambiguous or missed. */
   candidates: string[];
@@ -30,12 +30,15 @@ export interface ResolvedPlanName {
 
 type ResolveError = JsonlParseError | JsonlValidationError;
 
-/** Normalize a plan hint (`my-plan` or `.plans/my-plan`) to a bare name. */
+/**
+ * Normalize a plan hint to a bare name. Plan names are kebab-case and never
+ * contain `/`, so any directory prefix (`.taskman/plans/my-plan`,
+ * `some/root/my-plan`) reduces to its last segment.
+ */
 export function normalizePlanName(hint: string): string {
-  return hint
-    .replace(/^\.plans\//, '')
-    .replace(/\/+$/, '')
-    .trim();
+  const trimmed = hint.trim().replace(/\/+$/, '');
+  const lastSlash = trimmed.lastIndexOf('/');
+  return lastSlash === -1 ? trimmed : trimmed.slice(lastSlash + 1);
 }
 
 export function resolvePlanByName(
@@ -47,7 +50,7 @@ export function resolvePlanByName(
     if (opts.name) {
       const hint = normalizePlanName(opts.name);
       const match = manifest.find((entry) => entry.name === hint);
-      if (match) return { planName: match.name, planDir: `.plans/${match.name}`, candidates: [] };
+      if (match) return { planName: match.name, planDir: match.name, candidates: [] };
       const inProgress = manifest.filter((entry) => entry.status === 'in-progress');
       return { planName: undefined, candidates: inProgress.map((entry) => entry.name) };
     }
@@ -55,7 +58,7 @@ export function resolvePlanByName(
     const inProgress = manifest.filter((entry) => entry.status === 'in-progress');
     if (inProgress.length === 1) {
       const name = inProgress[0]!.name;
-      return { planName: name, planDir: `.plans/${name}`, candidates: [] };
+      return { planName: name, planDir: name, candidates: [] };
     }
     return { planName: undefined, candidates: inProgress.map((entry) => entry.name) };
   });

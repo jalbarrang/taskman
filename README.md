@@ -1,7 +1,8 @@
 # @dreki-gg/taskman
 
-A standalone task-management engine — and a `taskman` CLI — over a plain
-`.plans/` JSONL ledger. It is the core extracted from
+A standalone task-management engine — and a `taskman` CLI — over a plain JSONL
+plan ledger (default `.taskman/plans/`, configurable via `.taskmanrc`). It is
+the core extracted from
 [`@dreki-gg/pi-plan-mode`](../plan-mode), so any harness (not just pi) can drive
 the same plans, initiatives, and tasks.
 
@@ -15,12 +16,28 @@ a different agent, or as a library.
 
 ## The ledger (the one durable contract)
 
-Everything lives under `.plans/` in the current working directory:
+Everything lives under the plans root — `.taskman/plans/` in the current
+working directory by default:
 
-- `.plans/plans.jsonl` — the plan registry.
-- `.plans/initiatives.jsonl` — the initiative registry (initiatives group plans).
-- `.plans/<plan>/tasks.jsonl` — one plan's task list (first line is metadata).
-- `.plans/<plan>/HANDOFF.md`, `.plans/<initiative>/INITIATIVE.md` — prose docs.
+- `<root>/plans.jsonl` — the plan registry.
+- `<root>/initiatives.jsonl` — the initiative registry (initiatives group plans).
+- `<root>/<plan>/tasks.jsonl` — one plan's task list (first line is metadata).
+- `<root>/<plan>/HANDOFF.md`, `<root>/<initiative>/INITIATIVE.md` — prose docs.
+
+### Configuring the plans root (`.taskmanrc`)
+
+Drop a `.taskmanrc` JSON file in the working directory to relocate the ledger —
+useful when another workflow already claims a similar folder:
+
+```json
+{ "plans-root": "some/dir" }
+```
+
+The value IS the ledger folder (`some/dir/plans.jsonl`, `some/dir/<plan>/`).
+Resolution is cwd-only by design — no directory walk-up, no environment
+variable — so you (and agents) can always predict which folder a command
+targets. `taskman root` (add `--json` for machines) prints the resolved root
+and whether it came from `.taskmanrc` or the default.
 
 Three invariants are worth knowing; everything else is mechanism:
 
@@ -29,8 +46,9 @@ Three invariants are worth knowing; everything else is mechanism:
    when every member plan is terminal. Writing task state re-derives the
    registry — you do not set plan status by hand for the normal path.
 2. **Plan resolution is stateless.** A command targets a plan via `--plan
-   <name>` (accepts `.plans/<name>` too), else the *single* in-progress plan.
-   Ambiguous or missing → it exits non-zero and lists the candidates.
+   <name>` (a path prefix like `.taskman/plans/<name>` is stripped), else the
+   *single* in-progress plan. Ambiguous or missing → it exits non-zero and
+   lists the candidates.
 3. **Terminal statuses set manually are never auto-reverted.** `reconcile` only
    moves `in-progress ⇄ done`; it never resurrects a `superseded`/`abandoned`
    plan or regresses a finished one.
@@ -75,12 +93,22 @@ taskman reconcile --apply            # repair safe status drift
 ## As a library
 
 ```ts
-import { makePlanRuntime, resolvePlanByName, setTaskStatus } from '@dreki-gg/taskman';
+import {
+  makePlanRuntime,
+  resolveLedgerRoot,
+  resolvePlanByName,
+  setTaskStatus,
+} from '@dreki-gg/taskman';
 
-const run = makePlanRuntime(); // bridges the Effect programs to the live filesystem
+// Honour a .taskmanrc if present (the library never reads it implicitly);
+// makePlanRuntime() alone uses the default root, .taskman/plans.
+const run = makePlanRuntime(resolveLedgerRoot().root);
 const { planDir } = await run(resolvePlanByName({ name: 'my-plan' }));
 await run(setTaskStatus(planDir!, 't-001', 'done'));
 ```
+
+`makePlanRuntime(root)` takes the ledger folder itself — storage programs use
+ledger-relative paths, so the root places the whole registry.
 
 The public surface (storage, schema, reconcile, initiative projection,
 resolution, and composite write flows) is exported from the package root. The

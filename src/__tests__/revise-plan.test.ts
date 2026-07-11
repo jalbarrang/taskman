@@ -42,12 +42,12 @@ beforeEach(async () => {
   chdir(tmp);
   await run(upsertPlanEntry('p', { status: 'in-progress', title: 'Original Title' }));
   await run(
-    writeTasksJsonl('.plans/p', meta, [
+    writeTasksJsonl('p', meta, [
       task('t-001', { status: 'done', notes: 'x' }),
       task('t-002'),
     ]),
   );
-  await run(saveHandoff('.plans/p', '# Original handoff'));
+  await run(saveHandoff('p', '# Original handoff'));
 });
 
 afterEach(async () => {
@@ -64,7 +64,7 @@ describe('revise-plan', () => {
         { id: 't-003', description: 'brand new' },
       ]),
     });
-    const snap = await run(readTasksJsonl('.plans/p'));
+    const snap = await run(readTasksJsonl('p'));
     const byId = Object.fromEntries((snap?.tasks ?? []).map((t) => [t.id, t]));
     expect(byId['t-001']?.status).toBe('done');
     expect(byId['t-001']?.notes).toBe('x');
@@ -75,7 +75,7 @@ describe('revise-plan', () => {
 
   test('omitting tasks leaves the task set untouched', async () => {
     await revisePlanCommand({ plan: 'p', title: 'New Title Only' });
-    const snap = await run(readTasksJsonl('.plans/p'));
+    const snap = await run(readTasksJsonl('p'));
     expect(snap?.meta.title).toBe('New Title Only');
     expect(snap?.tasks.map((t) => t.id)).toEqual(['t-001', 't-002']);
     expect(snap?.tasks.find((t) => t.id === 't-001')?.notes).toBe('x');
@@ -83,8 +83,8 @@ describe('revise-plan', () => {
 
   test('title-only revise leaves handoff and tasks intact', async () => {
     await revisePlanCommand({ plan: 'p', title: 'Just Title' });
-    expect(await readFile('.plans/p/HANDOFF.md', 'utf8')).toBe('# Original handoff');
-    const snap = await run(readTasksJsonl('.plans/p'));
+    expect(await readFile('.taskman/plans/p/HANDOFF.md', 'utf8')).toBe('# Original handoff');
+    const snap = await run(readTasksJsonl('p'));
     expect(snap?.tasks).toHaveLength(2);
     expect(snap?.tasks.find((t) => t.id === 't-001')?.notes).toBe('x');
   });

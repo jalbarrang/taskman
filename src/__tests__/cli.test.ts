@@ -56,7 +56,7 @@ beforeEach(async () => {
   tmp = await mkdtemp(join(tmpdir(), 'taskman-cli-'));
   chdir(tmp);
   await run(upsertPlanEntry('p', { status: 'in-progress', title: 'Title p' }));
-  await run(writeTasksJsonl('.plans/p', meta, [task('t-001'), task('t-002')]));
+  await run(writeTasksJsonl('p', meta, [task('t-001'), task('t-002')]));
 });
 
 afterEach(async () => {
@@ -126,7 +126,7 @@ describe('create-plan', () => {
     expect(parsed.plan_name).toBe('new-plan');
     expect(parsed.task_ids).toEqual(['t-001', 't-002']);
 
-    const handoff = await readFile('.plans/new-plan/HANDOFF.md', 'utf8');
+    const handoff = await readFile('.taskman/plans/new-plan/HANDOFF.md', 'utf8');
     expect(handoff).toContain('Do the thing.');
 
     const list = JSON.parse(await capture(() => listPlansCommand({ json: true })));
@@ -171,7 +171,7 @@ describe('create-handoff', () => {
       createHandoffCommand('# Hi\nfresh handoff', { plan: 'p', json: true }),
     );
     expect(JSON.parse(out).plan_name).toBe('p');
-    const handoff = await readFile('.plans/p/HANDOFF.md', 'utf8');
+    const handoff = await readFile('.taskman/plans/p/HANDOFF.md', 'utf8');
     expect(handoff).toContain('fresh handoff');
   });
 
