@@ -104,3 +104,7 @@ MIT
 ## Releasing
 
 No changesets here — plain npm: `npm version minor && npm publish && git push --follow-tags`. Requires npm 2FA.
+
+## Skill
+
+The canonical agent-facing skill for this CLI lives in [jalbarrang/skills/taskman](https://github.com/jalbarrang/skills/tree/main/taskman) (`npx skills add jalbarrang/skills/taskman`). The copy under `skills/taskman/core` ships inside the npm package for pi consumers and mirrors it.
