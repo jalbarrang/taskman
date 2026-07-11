@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.0](https://github.com/jalbarrang/taskman/compare/v0.6.0...v0.7.0) (2026-07-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* configurable plans root via .taskmanrc, default .taskman/plans/
+
+### Features
+
+* command argument autocomplete + taskman create-plan/create-handoff CLI ([4aa34b1](https://github.com/jalbarrang/taskman/commit/4aa34b10d706b78814bfc786f3b721a847633781))
+* configurable plans root via .taskmanrc, default .taskman/plans/ ([2e4e292](https://github.com/jalbarrang/taskman/commit/2e4e292590635c28d5bad16147009d66e14fd2a8))
+* create-initiative and revise-plan commands ([22a7d09](https://github.com/jalbarrang/taskman/commit/22a7d097e68480216a2aadd7c1eef4d869ae423f))
+* **plan-mode:** file plans into external repos + drop in-memory status bar ([32f2c6c](https://github.com/jalbarrang/taskman/commit/32f2c6c60121c413c46707203128e7d63a2d7d7e))
+
 ## [0.6.0](https://github.com/jalbarrang/taskman/compare/taskman-v0.5.0...taskman-v0.6.0) (2026-07-11)
 
 
