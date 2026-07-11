@@ -1,3 +1,10 @@
+# Changelog
+
+## 0.5.0
+
+- `create-initiative` — create an initiative (INITIATIVE.md + registry entry) from any harness, matching pi plan-mode ledger shape
+- `revise-plan` — rewrite a plan in place (title/handoff/tasks); statuses and notes preserved for unchanged task ids; optional initiative/depends-on re-link
+
 # @dreki-gg/taskman
 
 ## 0.4.0

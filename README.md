@@ -46,13 +46,21 @@ taskman <command> --help  # flags + arguments for one command
 duplicate it (so it cannot drift). Every command prints human text by default
 and accepts `--json` for machine consumption.
 
-Create a plan from any harness (handoff/tasks accept an inline value, a
-`--*-file <path>`, or piped stdin):
+Create a plan from any harness (handoff/tasks accept an inline value, a `--*-file <path>`, or piped stdin):
 
 ```bash
 echo "$MARKDOWN" | taskman create-plan --name my-plan --title "My Plan" \
   --handoff-file - --tasks '[{"description":"do it"}]'
 taskman create-handoff --plan my-plan --file HANDOFF.md   # write/replace prose
+```
+
+Create an initiative, then link member plans; revise a plan in place when follow-up changes arrive (omitted fields stay as-is; matching task ids keep status/notes):
+
+```bash
+taskman create-initiative --name auth-overhaul --title "Auth Overhaul" --overview-file INITIATIVE.md
+taskman create-plan --name auth-api --title "Auth API" --initiative auth-overhaul \
+  --handoff "..." --tasks '[{"description":"scaffold"}]'
+taskman revise-plan --plan auth-api --title "Auth API v2" --tasks '[{"id":"t-001","description":"scaffold"},{"id":"t-002","description":"tests"}]'
 ```
 
 A typical execution loop:
