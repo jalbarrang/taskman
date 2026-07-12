@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/jalbarrang/taskman/compare/v0.7.0...v0.7.1) (2026-07-12)
+
+
+### Bug Fixes
+
+* **deps:** bump dependencies to latest ([#4](https://github.com/jalbarrang/taskman/issues/4)) ([f8e0d68](https://github.com/jalbarrang/taskman/commit/f8e0d687670580647eb7d30117e37689bb9523d0))
+
 ## [0.7.0](https://github.com/jalbarrang/taskman/compare/v0.6.0...v0.7.0) (2026-07-11)
 
 
