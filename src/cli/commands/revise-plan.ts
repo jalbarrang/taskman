@@ -1,22 +1,10 @@
-/**
- * `taskman revise-plan` — rewrite an existing plan in place.
- *
- * CLI sibling of plan-mode's `revise_plan`: every content field is optional;
- * omitted title/handoff/tasks are preserved. When `--tasks` is passed the new
- * array fully replaces the task set, but status/notes survive for unchanged ids.
- */
+/** Rewrite an existing plan from CLI-resolved optional content. */
 
-import { toKebabCase } from '../../ids.js';
-import { loadPlanData } from '../../resolve.js';
-import { runPlanIO, resolvePlanDir, displayPath, CliError } from '../runtime.js';
-import { emit } from '../format.js';
-import { persistRevisedPlan } from '../persist-revise.js';
-import {
-  mergeRevisedTasks,
-  parseDependsOn,
-  parseReviseTasks,
-  resolveOptionalContent,
-} from '../revise-tasks.js';
+import { revisePlan } from "../../app/revise-plan.js";
+import { displayPath, getAppContext, CliError } from "../runtime.js";
+import { emit } from "../format.js";
+import { resolveOptionalContent } from "../input.js";
+import { parseDependsOn, parseReviseTasks } from "../plan-inputs.js";
 
 export async function revisePlanCommand(opts: {
   plan?: string;
@@ -30,51 +18,28 @@ export async function revisePlanCommand(opts: {
   json?: boolean;
 }): Promise<void> {
   if (!opts.plan?.trim()) {
-    throw new CliError('--plan is required so the rewrite never targets an unrelated plan.');
+    throw new CliError("--plan is required so the rewrite never targets an unrelated plan.");
   }
-
-  const { planName, planDir } = await resolvePlanDir(opts.plan);
-  const plan = await runPlanIO(loadPlanData(planDir));
-  if (!plan) throw new CliError(`No tasks.jsonl found in ${displayPath(planName)}.`);
-
-  const newTitle = opts.title ?? plan.title;
-  const newHandoff =
-    (await resolveOptionalContent(opts.handoff, opts.handoffFile, 'handoff')) ?? plan.handoff;
-  const tasksRaw = await resolveOptionalContent(opts.tasks, opts.tasksFile, 'tasks');
-  const now = new Date().toISOString();
-  const tasks = tasksRaw
-    ? mergeRevisedTasks(plan.tasks, parseReviseTasks(tasksRaw), now)
-    : plan.tasks;
-
-  await runPlanIO(
-    persistRevisedPlan({
-      planDir,
-      plan,
-      title: newTitle,
-      handoff: newHandoff,
-      tasks,
-      initiative: opts.initiative ? toKebabCase(opts.initiative) : undefined,
-      dependsOn: parseDependsOn(opts.dependsOn),
-      now,
-    }),
-  );
-
-  const changed = [
-    opts.title !== undefined ? 'title' : undefined,
-    opts.handoff !== undefined || opts.handoffFile !== undefined ? 'handoff' : undefined,
-    tasksRaw !== undefined ? 'tasks' : undefined,
-  ].filter(Boolean);
-
+  const handoff = await resolveOptionalContent(opts.handoff, opts.handoffFile, "handoff");
+  const tasksRaw = await resolveOptionalContent(opts.tasks, opts.tasksFile, "tasks");
+  const result = await revisePlan(getAppContext(), {
+    plan: opts.plan,
+    title: opts.title,
+    handoff,
+    tasks: tasksRaw === undefined ? undefined : parseReviseTasks(tasksRaw),
+    initiative: opts.initiative,
+    dependsOnPlans: parseDependsOn(opts.dependsOn),
+  });
   emit(
     Boolean(opts.json),
     {
-      plan_name: planName,
-      plan_dir: displayPath(planName),
-      title: newTitle,
-      task_count: tasks.length,
-      task_ids: tasks.map((t) => t.id),
-      changed,
+      plan_name: result.planName,
+      plan_dir: displayPath(result.planDir),
+      title: result.title,
+      task_count: result.tasks.length,
+      task_ids: result.tasks.map((task) => task.id),
+      changed: result.changed,
     },
-    `Plan "${newTitle}" revised (${changed.join(', ') || 'no changes'}) in ${displayPath(planName)}.`,
+    `Plan "${result.title}" revised (${result.changed.join(", ") || "no changes"}) in ${displayPath(result.planDir)}.`,
   );
 }

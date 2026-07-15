@@ -1,64 +1,38 @@
-/**
- * Shared CLI plumbing: `.taskmanrc` ledger-root resolution, a single
- * `runPlanIO` bridge rooted at the ledger, plus stateless plan resolution that
- * exits with a clear message when no single plan can be picked.
- */
+/** Shared CLI adapters over the application context. */
 
 import { join } from 'node:path';
-import { resolveLedgerRoot, type ResolvedLedgerRoot } from '../config.js';
-import { makePlanRuntime, type RunPlanIO } from '../effects/runtime.js';
-import { resolvePlanByName } from '../resolve.js';
+import { type ResolvedLedgerRoot } from '../config.js';
+import { type RunPlanIO } from '../effects/runtime.js';
+import { makeAppContext, type AppContext } from '../app/context.js';
+import { requirePlan } from '../app/resolve-plan.js';
 
-let resolved: ResolvedLedgerRoot | undefined;
+let context: AppContext | undefined;
+let contextCwd: string | undefined;
 
-/**
- * Ledger root for this CLI process, resolved from `<cwd>/.taskmanrc` (or the
- * default `.taskman/plans`). Resolved lazily on first use — not at import —
- * so a malformed `.taskmanrc` surfaces through the CLI's normal error path,
- * and relative roots keep resolving against the working directory at
- * operation time.
- */
+export function getAppContext(): AppContext {
+  const cwd = process.cwd();
+  if (!context || contextCwd !== cwd) {
+    context = makeAppContext(cwd);
+    contextCwd = cwd;
+  }
+  return context;
+}
+
 export function getLedger(): ResolvedLedgerRoot {
-  resolved ??= resolveLedgerRoot();
-  return resolved;
+  const { displayRoot: root, source } = getAppContext();
+  return { root, source };
 }
 
-let bridge: RunPlanIO | undefined;
+export const runPlanIO: RunPlanIO = (program) => getAppContext().run(program);
 
-export const runPlanIO: RunPlanIO = (program) => {
-  bridge ??= makePlanRuntime(getLedger().root);
-  return bridge(program);
-};
-
-/** Root-prefixed path for human/JSON output (storage paths stay ledger-relative). */
 export function displayPath(...segments: string[]): string {
-  return join(getLedger().root, ...segments);
+  return join(getAppContext().displayRoot, ...segments);
 }
 
-export class CliError extends Error {}
+export { AppError as CliError } from '../app/errors.js';
 
-/**
- * Resolve a target plan directory from an optional `--plan` hint, else the sole
- * in-progress plan. Throws `CliError` (caught at the top level → exit 1) with
- * the in-progress candidates when resolution is ambiguous or misses.
- */
 export async function resolvePlanDir(
   name?: string,
 ): Promise<{ planName: string; planDir: string }> {
-  const { planName, planDir, candidates } = await runPlanIO(resolvePlanByName({ name }));
-  if (planName && planDir) return { planName, planDir };
-
-  if (name) {
-    throw new CliError(
-      `Plan "${name}" not found. In-progress plans: ${candidates.join(', ') || '(none)'}.`,
-    );
-  }
-  if (candidates.length > 1) {
-    throw new CliError(
-      `Multiple in-progress plans — pass --plan <name>. Candidates: ${candidates.join(', ')}.`,
-    );
-  }
-  throw new CliError(
-    `No in-progress plan found in ${displayPath('plans.jsonl')}. Pass --plan <name>.`,
-  );
+  return requirePlan(getAppContext(), name);
 }

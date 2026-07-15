@@ -1,39 +1,27 @@
-/**
- * `taskman status` — progress + task ids/statuses for the resolved plan.
- */
+/** `taskman status` adapter. */
 
-import { loadPlanData } from '../../resolve.js';
+import { getPlanStatus } from '../../app/status.js';
 import type { TaskStatus } from '../../types.js';
-import { runPlanIO, resolvePlanDir, displayPath, CliError } from '../runtime.js';
+import { getAppContext } from '../runtime.js';
 import { STATUS_GLYPH, emit } from '../format.js';
 
 export async function statusCommand(opts: { plan?: string; json?: boolean }): Promise<void> {
-  const { planName, planDir } = await resolvePlanDir(opts.plan);
-  const plan = await runPlanIO(loadPlanData(planDir));
-  if (!plan) throw new CliError(`No tasks.jsonl found in ${displayPath(planName)}.`);
-
-  const counts: Record<TaskStatus, number> = {
-    done: 0,
-    skipped: 0,
-    blocked: 0,
-    pending: 0,
-    deferred: 0,
-  };
-  for (const task of plan.tasks) counts[task.status] += 1;
-  const resolved = counts.done + counts.skipped;
-
-  const parts = [`done ${counts.done}`, `skipped ${counts.skipped}`, `pending ${counts.pending}`];
-  if (counts.blocked) parts.push(`blocked ${counts.blocked}`);
-  if (counts.deferred) parts.push(`follow-up ${counts.deferred}`);
-
+  const plan = await getPlanStatus(getAppContext(), { plan: opts.plan });
+  const resolved = plan.counts.done + plan.counts.skipped;
+  const parts = [
+    `done ${plan.counts.done}`,
+    `skipped ${plan.counts.skipped}`,
+    `pending ${plan.counts.pending}`,
+  ];
+  if (plan.counts.blocked) parts.push(`blocked ${plan.counts.blocked}`);
+  if (plan.counts.deferred) parts.push(`follow-up ${plan.counts.deferred}`);
   const lines = plan.tasks.map(
-    (t) => `  ${STATUS_GLYPH[t.status]} ${t.id} [${t.status}] ${t.description}`,
+    (task) => `  ${STATUS_GLYPH[task.status]} ${task.id} [${task.status}] ${task.description}`,
   );
   const human =
     `Plan: ${plan.title} (${plan.planName})\n` +
     `Progress: ${resolved}/${plan.tasks.length} resolved — ${parts.join(', ')}\n` +
     `Tasks:\n${lines.join('\n')}`;
-
   emit(
     Boolean(opts.json),
     {
@@ -41,8 +29,8 @@ export async function statusCommand(opts: { plan?: string; json?: boolean }): Pr
       plan_name: plan.planName,
       title: plan.title,
       total: plan.tasks.length,
-      counts,
-      task_ids: plan.tasks.map((t) => t.id),
+      counts: plan.counts as Record<TaskStatus, number>,
+      task_ids: plan.tasks.map((task) => task.id),
     },
     human,
   );

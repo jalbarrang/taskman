@@ -3,14 +3,14 @@
  * a foreign harness: an inline string, a file path, or piped stdin.
  */
 
-import { readFile } from 'node:fs/promises';
-import { CliError } from './runtime.js';
+import { readFile } from "node:fs/promises";
+import { CliError } from "./runtime.js";
 
 /** Read all of stdin as a UTF-8 string (used when neither inline nor file is given). */
 export async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
   for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
-  return Buffer.concat(chunks).toString('utf8');
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 /**
@@ -24,9 +24,9 @@ export async function resolveContent(
   label: string,
 ): Promise<string> {
   if (inline !== undefined) return inline;
-  if (file !== undefined && file !== '-') {
+  if (file !== undefined && file !== "-") {
     try {
-      return await readFile(file, 'utf8');
+      return await readFile(file, "utf8");
     } catch {
       throw new CliError(`Could not read ${label} file: ${file}`);
     }
@@ -35,4 +35,14 @@ export async function resolveContent(
     throw new CliError(`No ${label} provided. Pass it inline, via --${label}-file, or on stdin.`);
   }
   return readStdin();
+}
+
+/** Resolve an optional payload, preserving omission for revise operations. */
+export async function resolveOptionalContent(
+  inline: string | undefined,
+  file: string | undefined,
+  label: string,
+): Promise<string | undefined> {
+  if (inline === undefined && file === undefined) return undefined;
+  return resolveContent(inline, file, label);
 }

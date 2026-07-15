@@ -5,12 +5,10 @@
  * plan re-projects its parent initiative.
  */
 
-import { Effect } from 'effect';
-import { upsertPlanEntry } from '../../storage/plans-manifest.js';
+import { closePlan } from '../../app/lifecycle.js';
 import { upsertInitiativeEntry } from '../../storage/initiatives-manifest.js';
-import { reconcileInitiativeForPlan } from '../../initiative.js';
 import type { PlanStatus } from '../../types.js';
-import { runPlanIO, resolvePlanDir, CliError } from '../runtime.js';
+import { getAppContext, runPlanIO, CliError } from '../runtime.js';
 import { emit } from '../format.js';
 
 const VALID: PlanStatus[] = ['done', 'superseded', 'abandoned', 'in-progress'];
@@ -26,17 +24,11 @@ export async function closePlanCommand(
   status: string,
   opts: { plan?: string; reason?: string; json?: boolean },
 ): Promise<void> {
-  const s = assertStatus(status);
-  const { planName } = await resolvePlanDir(opts.plan);
-  await runPlanIO(
-    upsertPlanEntry(planName, { status: s, reason: opts.reason }).pipe(
-      Effect.andThen(reconcileInitiativeForPlan(planName)),
-    ),
-  );
+  const result = await closePlan(getAppContext(), { ...opts, status });
   emit(
     Boolean(opts.json),
-    { plan_name: planName, status: s, reason: opts.reason ?? null },
-    `Plan ${planName} → ${s}${opts.reason ? ` (${opts.reason})` : ''}.`,
+    { plan_name: result.planName, status: result.status, reason: opts.reason ?? null },
+    `Plan ${result.planName} → ${result.status}${opts.reason ? ` (${opts.reason})` : ''}.`,
   );
 }
 

@@ -29,5 +29,12 @@ export function buildProgram(): Command {
     .version(packageVersion());
   registerQueryCommands(program);
   registerMutateCommands(program);
+  program
+    .command('mcp')
+    .description('Serve the Taskman MCP server over stdio.')
+    .action(async () => {
+      const { mcpCommand } = await import('./commands/mcp.js');
+      await mcpCommand(process.cwd());
+    });
   return program;
 }

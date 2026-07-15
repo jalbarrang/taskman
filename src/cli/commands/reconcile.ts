@@ -1,63 +1,40 @@
-/**
- * `taskman reconcile [--apply]` — detect (and optionally repair) status drift.
- */
+/** `taskman reconcile [--apply]` adapter. */
 
-import { Effect } from 'effect';
-import {
-  collectPlanDrift,
-  collectInitiativeDrift,
-  applyReconcile,
-  applyInitiativeReconcile,
-} from '../../reconcile.js';
-import { runPlanIO } from '../runtime.js';
+import { reconcileLedger } from '../../app/reconcile.js';
+import { getAppContext } from '../runtime.js';
 import { emit } from '../format.js';
 
 export async function reconcileCommand(opts: { apply?: boolean; json?: boolean }): Promise<void> {
-  const planRows = await runPlanIO(collectPlanDrift());
-  const initRows = await runPlanIO(collectInitiativeDrift());
-
-  let repairedPlans: typeof planRows = [];
-  let repairedInits: typeof initRows = [];
-  if (opts.apply) {
-    repairedPlans = await runPlanIO(applyReconcile(planRows).pipe(Effect.orDie));
-    repairedInits = await runPlanIO(applyInitiativeReconcile(initRows).pipe(Effect.orDie));
-  }
-
-  const planDrift = planRows.filter((r) => r.drift);
-  const initDrift = initRows.filter((r) => r.drift);
-
+  const result = await reconcileLedger(getAppContext(), opts);
   const lines: string[] = [];
-  if (planDrift.length === 0 && initDrift.length === 0) {
+  if (result.planDrift.length === 0 && result.initiativeDrift.length === 0) {
     lines.push('No drift detected.');
   } else {
-    for (const r of planDrift) {
+    for (const row of result.planDrift) {
       lines.push(
-        `  plan ${r.name}: ${r.drift}` +
-          (r.drift === 'status'
-            ? ` (${r.registryStatus} → ${r.derivedStatus}, ${r.direction})`
+        `  plan ${row.name}: ${row.drift}` +
+          (row.drift === 'status'
+            ? ` (${row.registryStatus} → ${row.derivedStatus}, ${row.direction})`
             : ''),
       );
     }
-    for (const r of initDrift) {
-      lines.push(`  initiative ${r.name}: status (${r.registryStatus} → ${r.derivedStatus})`);
+    for (const row of result.initiativeDrift) {
+      lines.push(`  initiative ${row.name}: status (${row.registryStatus} → ${row.derivedStatus})`);
     }
   }
-  if (opts.apply) {
+  if (result.applied) {
     lines.push(
-      `Applied: ${repairedPlans.length} plan(s), ${repairedInits.length} initiative(s) repaired.`,
+      `Applied: ${result.applied.plans.length} plan(s), ${result.applied.initiatives.length} initiative(s) repaired.`,
     );
-  } else if (planDrift.length || initDrift.length) {
+  } else if (result.planDrift.length || result.initiativeDrift.length) {
     lines.push('Run with --apply to repair safe (upgrade) drift.');
   }
-
   emit(
     Boolean(opts.json),
     {
-      plan_drift: planDrift,
-      initiative_drift: initDrift,
-      applied: opts.apply
-        ? { plans: repairedPlans.map((r) => r.name), initiatives: repairedInits.map((r) => r.name) }
-        : null,
+      plan_drift: result.planDrift,
+      initiative_drift: result.initiativeDrift,
+      applied: result.applied,
     },
     lines.join('\n'),
   );

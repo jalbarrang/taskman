@@ -90,6 +90,37 @@ taskman add-task "handle empty case" --reason "found gap while implementing"
 taskman reconcile --apply            # repair safe status drift
 ```
 
+## MCP server
+
+The MCP server requires Node.js 24 or newer and runs as a first-class stdio service: `taskman mcp`. Its stdout is reserved for MCP JSON-RPC; diagnostics use stderr.
+
+Configure any MCP-capable harness to start it from the repository whose ledger it should manage:
+
+```json
+{
+  "command": "taskman",
+  "args": ["mcp"],
+  "cwd": "/absolute/path/to/repository"
+}
+```
+
+The server binds its ledger root once at startup from that `cwd`, using the repository's `.taskmanrc` when present or the default `.taskman/plans/` otherwise. Tools do not accept root or filesystem-path inputs. Every call reads the ledger fresh from disk, so changes made before a call are visible.
+
+Version 1 exposes these eight tools:
+
+- `taskman_status` resolves and inspects a plan, including tasks and finalizability.
+- `taskman_list` lists plans or initiatives with filters and sorting.
+- `taskman_create_plan` creates or replaces a plan with its handoff and tasks.
+- `taskman_revise_plan` updates a plan while preserving matching task state.
+- `taskman_update_task` changes one task's status and optional notes.
+- `taskman_add_task` records a deferred follow-up task.
+- `taskman_close` sets a plan lifecycle status.
+- `taskman_reconcile` reports or safely applies status-projection repairs.
+
+There are no MCP resources or prompts in v1. MCP is available through `taskman mcp`, not as a public MCP library export.
+
+Mutating tool calls are serialized within one running MCP server process. That queue does not coordinate with another Taskman CLI or MCP server process, so concurrent cross-process writes can still race; v1 makes no cross-process atomicity guarantee.
+
 ## As a library
 
 ```ts
