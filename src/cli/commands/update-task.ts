@@ -1,8 +1,8 @@
 /** `taskman update-task <id> <status>` adapter. */
 
-import { updateTask } from '../../app/tasks.js';
-import { getAppContext } from '../runtime.js';
-import { emit } from '../format.js';
+import { updateTask } from "../../app/tasks.js";
+import { getAppContext } from "../runtime.js";
+import { emit } from "../format.js";
 
 export async function updateTaskCommand(
   taskId: string,
@@ -19,6 +19,6 @@ export async function updateTaskCommand(
       finalizable: result.finalizable,
     },
     `${result.taskId} → ${result.status} in ${result.planName}` +
-      (result.finalizable ? ' (plan now finalizable)' : ''),
+      (result.finalizable ? " (plan now finalizable)" : ""),
   );
 }

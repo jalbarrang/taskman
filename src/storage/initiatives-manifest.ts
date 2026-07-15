@@ -13,19 +13,19 @@
  * `../initiative.ts` to keep the dependency direction one-way and cycle-free.
  */
 
-import { Effect, Either, Option } from 'effect';
-import { FileSystem } from '../effects/filesystem.js';
-import { JsonlParseError, JsonlValidationError, PlanWriteError } from '../errors.js';
-import { decodeInitiativeManifestEntry } from '../schema.js';
-import type { InitiativeStatus } from '../types.js';
-import { withFileLock } from './file-lock.js';
+import { Effect, Either, Option } from "effect";
+import { FileSystem } from "../effects/filesystem.js";
+import { JsonlParseError, JsonlValidationError, PlanWriteError } from "../errors.js";
+import { decodeInitiativeManifestEntry } from "../schema.js";
+import type { InitiativeStatus } from "../types.js";
+import { withFileLock } from "./file-lock.js";
 
 // Ledger-relative, like plans-manifest.ts.
-const MANIFEST_DIR = '.';
-const MANIFEST_PATH = 'initiatives.jsonl';
+const MANIFEST_DIR = ".";
+const MANIFEST_PATH = "initiatives.jsonl";
 
 export interface InitiativeManifestEntry {
-  _type: 'initiative';
+  _type: "initiative";
   name: string;
   status: InitiativeStatus;
   title: string;
@@ -36,7 +36,7 @@ export interface InitiativeManifestEntry {
 
 /** A status is terminal (closed) when it is anything other than in-progress. */
 export function isTerminalStatus(status: InitiativeStatus): boolean {
-  return status !== 'in-progress';
+  return status !== "in-progress";
 }
 
 type ReadError = JsonlParseError | JsonlValidationError;
@@ -83,7 +83,7 @@ export function writeInitiativesManifest(
     const fs = yield* FileSystem;
     yield* fs.makeDir(MANIFEST_DIR);
     const content =
-      entries.map((entry) => JSON.stringify(entry)).join('\n') + (entries.length ? '\n' : '');
+      entries.map((entry) => JSON.stringify(entry)).join("\n") + (entries.length ? "\n" : "");
     yield* fs.writeFileAtomic(MANIFEST_PATH, content);
   });
 }
@@ -109,10 +109,10 @@ export function applyInitiativeUpsert(
   const index = entries.findIndex((entry) => entry.name === name);
   const existing = index === -1 ? undefined : entries[index];
   const entry: InitiativeManifestEntry = {
-    _type: 'initiative',
+    _type: "initiative",
     name,
     status: updates.status,
-    title: updates.title ?? existing?.title ?? 'Untitled initiative',
+    title: updates.title ?? existing?.title ?? "Untitled initiative",
     created_at: existing?.created_at ?? now,
     // Terminal statuses record a completion timestamp; reopening clears it.
     completed_at: isTerminalStatus(updates.status) ? (existing?.completed_at ?? now) : null,

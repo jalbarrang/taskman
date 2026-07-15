@@ -1,6 +1,6 @@
-import { Effect, Either, Option } from 'effect';
-import { join } from 'node:path';
-import { FileSystem } from '../effects/filesystem.js';
+import { Effect, Either, Option } from "effect";
+import { join } from "node:path";
+import { FileSystem } from "../effects/filesystem.js";
 import {
   JsonlParseError,
   JsonlValidationError,
@@ -8,12 +8,12 @@ import {
   PlanWriteError,
   TaskNotFound,
   TasksFileNotFound,
-} from '../errors.js';
-import { decodeTasksLine } from '../schema.js';
-import type { TaskMeta, TaskRecord } from '../types.js';
-import { withFileLock } from './file-lock.js';
+} from "../errors.js";
+import { decodeTasksLine } from "../schema.js";
+import type { TaskMeta, TaskRecord } from "../types.js";
+import { withFileLock } from "./file-lock.js";
 
-const TASKS_FILE = 'tasks.jsonl';
+const TASKS_FILE = "tasks.jsonl";
 
 export interface TasksSnapshot {
   meta: TaskMeta;
@@ -56,7 +56,7 @@ export function readTasksJsonl(
       }
 
       const record = decoded.right;
-      if (record._type === 'meta') meta = record;
+      if (record._type === "meta") meta = record;
       else tasks.push(record);
     }
 
@@ -73,7 +73,7 @@ export function writeTasksJsonl(
   return Effect.gen(function* () {
     const fs = yield* FileSystem;
     yield* fs.makeDir(planDir);
-    const content = [meta, ...tasks].map((record) => JSON.stringify(record)).join('\n') + '\n';
+    const content = [meta, ...tasks].map((record) => JSON.stringify(record)).join("\n") + "\n";
     yield* fs.writeFileAtomic(join(planDir, TASKS_FILE), content);
   });
 }
@@ -81,7 +81,7 @@ export function writeTasksJsonl(
 export function updateTask(
   planDir: string,
   taskId: string,
-  updates: Partial<Omit<TaskRecord, '_type' | 'id' | 'created_at'>>,
+  updates: Partial<Omit<TaskRecord, "_type" | "id" | "created_at">>,
 ): Effect.Effect<
   TaskRecord,
   ReadError | PlanWriteError | TasksFileNotFound | TaskNotFound,

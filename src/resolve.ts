@@ -11,13 +11,13 @@
  * `{ planName: undefined, candidates }`.
  */
 
-import { Effect } from 'effect';
-import { FileSystem } from './effects/filesystem.js';
-import type { JsonlParseError, JsonlValidationError, MissingMetaRecord } from './errors.js';
-import { readPlansManifest } from './storage/plans-manifest.js';
-import { readTasksJsonl } from './storage/task-storage.js';
-import { loadHandoff } from './storage/plan-storage.js';
-import type { PlanData } from './types.js';
+import { Effect } from "effect";
+import { FileSystem } from "./effects/filesystem.js";
+import type { JsonlParseError, JsonlValidationError, MissingMetaRecord } from "./errors.js";
+import { readPlansManifest } from "./storage/plans-manifest.js";
+import { readTasksJsonl } from "./storage/task-storage.js";
+import { loadHandoff } from "./storage/plan-storage.js";
+import type { PlanData } from "./types.js";
 
 export interface ResolvedPlanName {
   /** The resolved bare plan name, when resolvable. */
@@ -36,8 +36,8 @@ type ResolveError = JsonlParseError | JsonlValidationError;
  * `some/root/my-plan`) reduces to its last segment.
  */
 export function normalizePlanName(hint: string): string {
-  const trimmed = hint.trim().replace(/\/+$/, '');
-  const lastSlash = trimmed.lastIndexOf('/');
+  const trimmed = hint.trim().replace(/\/+$/, "");
+  const lastSlash = trimmed.lastIndexOf("/");
   return lastSlash === -1 ? trimmed : trimmed.slice(lastSlash + 1);
 }
 
@@ -51,11 +51,11 @@ export function resolvePlanByName(
       const hint = normalizePlanName(opts.name);
       const match = manifest.find((entry) => entry.name === hint);
       if (match) return { planName: match.name, planDir: match.name, candidates: [] };
-      const inProgress = manifest.filter((entry) => entry.status === 'in-progress');
+      const inProgress = manifest.filter((entry) => entry.status === "in-progress");
       return { planName: undefined, candidates: inProgress.map((entry) => entry.name) };
     }
 
-    const inProgress = manifest.filter((entry) => entry.status === 'in-progress');
+    const inProgress = manifest.filter((entry) => entry.status === "in-progress");
     if (inProgress.length === 1) {
       const name = inProgress[0]!.name;
       return { planName: name, planDir: name, candidates: [] };
@@ -79,7 +79,7 @@ export function loadPlanData(
     return {
       title: snapshot.meta.title,
       planName: snapshot.meta.plan_name,
-      handoff: handoff ?? '',
+      handoff: handoff ?? "",
       tasks: snapshot.tasks,
       base_commit: snapshot.meta.base_commit,
     };

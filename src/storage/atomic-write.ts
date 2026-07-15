@@ -1,9 +1,9 @@
-import { Effect } from 'effect';
-import { createWriteStream } from 'node:fs';
-import { open, rename, rm } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { randomUUID } from 'node:crypto';
-import { PlanWriteError } from '../errors.js';
+import { Effect } from "effect";
+import { createWriteStream } from "node:fs";
+import { open, rename, rm } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { randomUUID } from "node:crypto";
+import { PlanWriteError } from "../errors.js";
 
 export interface AtomicWriteOptions {
   /** Test seam: file mode for the temporary file. */
@@ -49,13 +49,13 @@ async function writeFileAtomicPromise(
 
 async function writeAndSync(path: string, data: string | Buffer, mode?: number): Promise<void> {
   await new Promise<void>((resolve, reject) => {
-    const stream = createWriteStream(path, { flags: 'wx', mode });
-    stream.once('error', reject);
-    stream.once('finish', resolve);
+    const stream = createWriteStream(path, { flags: "wx", mode });
+    stream.once("error", reject);
+    stream.once("finish", resolve);
     stream.end(data);
   });
 
-  const handle = await open(path, 'r+');
+  const handle = await open(path, "r+");
   try {
     await handle.sync();
   } finally {
@@ -65,7 +65,7 @@ async function writeAndSync(path: string, data: string | Buffer, mode?: number):
 
 async function syncDirectory(dir: string): Promise<void> {
   // Directory fsync is best-effort: supported on Unix, not always elsewhere.
-  const handle = await open(dir, 'r').catch(() => undefined);
+  const handle = await open(dir, "r").catch(() => undefined);
   if (!handle) return;
   try {
     await handle.sync().catch(() => undefined);

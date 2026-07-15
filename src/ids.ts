@@ -5,8 +5,8 @@
 export function toKebabCase(name: string): string {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
     .slice(0, 60);
 }
 
@@ -27,5 +27,5 @@ export function nextTaskId(existingIds: readonly string[]): string {
     if (n > max) max = n;
   }
   const next = matched ? max + 1 : existingIds.length + 1;
-  return `t-${String(next).padStart(3, '0')}`;
+  return `t-${String(next).padStart(3, "0")}`;
 }

@@ -13,28 +13,28 @@
  * `in-progress` ⇄ `done` projection and never touches terminal statuses.
  */
 
-import { Effect } from 'effect';
-import { FileSystem } from './effects/filesystem.js';
+import { Effect } from "effect";
+import { FileSystem } from "./effects/filesystem.js";
 import type {
   JsonlParseError,
   JsonlValidationError,
   MissingMetaRecord,
   PlanWriteError,
-} from './errors.js';
-import { readPlansManifest, reconcilePlanStatus } from './storage/plans-manifest.js';
-import { readInitiativesManifest } from './storage/initiatives-manifest.js';
+} from "./errors.js";
+import { readPlansManifest, reconcilePlanStatus } from "./storage/plans-manifest.js";
+import { readInitiativesManifest } from "./storage/initiatives-manifest.js";
 import {
   isInitiativeFinalizable,
   membersOf,
   reconcileInitiativeForPlan,
   reconcileInitiativeStatus,
-} from './initiative.js';
-import { readTasksJsonl } from './storage/task-storage.js';
-import { isPlanFinalizable } from './task-status.js';
-import type { PlanStatus } from './types.js';
+} from "./initiative.js";
+import { readTasksJsonl } from "./storage/task-storage.js";
+import { isPlanFinalizable } from "./task-status.js";
+import type { PlanStatus } from "./types.js";
 
 // Ledger root itself; plan dirs are its immediate children.
-const PLANS_DIR = '.';
+const PLANS_DIR = ".";
 
 export interface PlanDriftRow {
   name: string;
@@ -42,7 +42,7 @@ export interface PlanDriftRow {
   registryStatus?: PlanStatus;
   title?: string;
   /** Derived from tasks: `done` when finalizable, else `in-progress`. */
-  derivedStatus?: 'in-progress' | 'done';
+  derivedStatus?: "in-progress" | "done";
   /** Resolved/total task counts when a tasks.jsonl exists. */
   resolved?: number;
   total?: number;
@@ -55,7 +55,7 @@ export interface PlanDriftRow {
    *   - 'orphan'        : tasks.jsonl dir but no registry entry
    *   - undefined       : in sync
    */
-  drift?: 'status' | 'registry-only' | 'orphan';
+  drift?: "status" | "registry-only" | "orphan";
   /**
    * For `status` drift, the direction the registry would move if projected from
    * tasks:
@@ -67,7 +67,7 @@ export interface PlanDriftRow {
    * back to in-progress (the wrong direction). We surface it for a human to
    * resolve by marking the tasks done instead.
    */
-  direction?: 'upgrade' | 'downgrade';
+  direction?: "upgrade" | "downgrade";
 }
 
 type CollectError = JsonlParseError | JsonlValidationError | MissingMetaRecord;
@@ -79,7 +79,7 @@ export function collectPlanDrift(): Effect.Effect<PlanDriftRow[], CollectError, 
     const manifest = yield* readPlansManifest();
     const dirs = yield* Effect.orElseSucceed(fs.listDirectories(PLANS_DIR), () => [] as string[]);
     // Ignore dotfile dirs like `.archive`.
-    const taskDirs = new Set(dirs.filter((name) => !name.startsWith('.')));
+    const taskDirs = new Set(dirs.filter((name) => !name.startsWith(".")));
 
     const rows: PlanDriftRow[] = [];
     const seen = new Set<string>();
@@ -93,23 +93,23 @@ export function collectPlanDrift(): Effect.Effect<PlanDriftRow[], CollectError, 
           registryStatus: entry.status,
           title: entry.title,
           hasTasks: false,
-          drift: 'registry-only',
+          drift: "registry-only",
         });
         continue;
       }
       const total = snapshot.tasks.length;
       const resolved = snapshot.tasks.filter(
-        (t) => t.status === 'done' || t.status === 'skipped',
+        (t) => t.status === "done" || t.status === "skipped",
       ).length;
-      const derivedStatus = isPlanFinalizable(snapshot.tasks) ? 'done' : 'in-progress';
+      const derivedStatus = isPlanFinalizable(snapshot.tasks) ? "done" : "in-progress";
       // Terminal statuses (superseded/abandoned) are intentional — never drift.
-      const isTerminalManual = entry.status === 'superseded' || entry.status === 'abandoned';
-      const drift = !isTerminalManual && entry.status !== derivedStatus ? 'status' : undefined;
+      const isTerminalManual = entry.status === "superseded" || entry.status === "abandoned";
+      const drift = !isTerminalManual && entry.status !== derivedStatus ? "status" : undefined;
       const direction =
-        drift === 'status'
-          ? derivedStatus === 'done'
-            ? ('upgrade' as const)
-            : ('downgrade' as const)
+        drift === "status"
+          ? derivedStatus === "done"
+            ? ("upgrade" as const)
+            : ("downgrade" as const)
           : undefined;
       rows.push({
         name: entry.name,
@@ -131,16 +131,16 @@ export function collectPlanDrift(): Effect.Effect<PlanDriftRow[], CollectError, 
       if (!snapshot) continue;
       const total = snapshot.tasks.length;
       const resolved = snapshot.tasks.filter(
-        (t) => t.status === 'done' || t.status === 'skipped',
+        (t) => t.status === "done" || t.status === "skipped",
       ).length;
       rows.push({
         name,
         title: snapshot.meta.title,
-        derivedStatus: isPlanFinalizable(snapshot.tasks) ? 'done' : 'in-progress',
+        derivedStatus: isPlanFinalizable(snapshot.tasks) ? "done" : "in-progress",
         resolved,
         total,
         hasTasks: true,
-        drift: 'orphan',
+        drift: "orphan",
       });
     }
 
@@ -155,10 +155,10 @@ export interface InitiativeDriftRow {
   registryStatus: PlanStatus;
   title: string;
   /** Projected from member plans: `done` when finalizable, else `in-progress`. */
-  derivedStatus: 'in-progress' | 'done';
+  derivedStatus: "in-progress" | "done";
   members: number;
   /** 'status' when the registry status disagrees with the projection. */
-  drift?: 'status';
+  drift?: "status";
 }
 
 /** Compare each initiative's registry status against its member-plan projection. */
@@ -171,13 +171,13 @@ export function collectInitiativeDrift(): Effect.Effect<
     const initiatives = yield* readInitiativesManifest();
     const plans = yield* readPlansManifest();
     return initiatives.map((entry) => {
-      const derivedStatus: 'in-progress' | 'done' = isInitiativeFinalizable(entry.name, plans)
-        ? 'done'
-        : 'in-progress';
+      const derivedStatus: "in-progress" | "done" = isInitiativeFinalizable(entry.name, plans)
+        ? "done"
+        : "in-progress";
       // Terminal statuses (superseded/abandoned) are intentional — never drift.
-      const isTerminalManual = entry.status === 'superseded' || entry.status === 'abandoned';
+      const isTerminalManual = entry.status === "superseded" || entry.status === "abandoned";
       const drift =
-        !isTerminalManual && entry.status !== derivedStatus ? ('status' as const) : undefined;
+        !isTerminalManual && entry.status !== derivedStatus ? ("status" as const) : undefined;
       return {
         name: entry.name,
         registryStatus: entry.status,
@@ -197,7 +197,7 @@ export function applyInitiativeReconcile(
   return Effect.gen(function* () {
     const repaired: InitiativeDriftRow[] = [];
     for (const row of rows) {
-      if (row.drift !== 'status') continue;
+      if (row.drift !== "status") continue;
       yield* reconcileInitiativeStatus(row.name);
       repaired.push(row);
     }
@@ -223,11 +223,11 @@ export function applyReconcile(
   return Effect.gen(function* () {
     const repaired: PlanDriftRow[] = [];
     for (const row of rows) {
-      if (row.drift !== 'status' || !row.derivedStatus) continue;
+      if (row.drift !== "status" || !row.derivedStatus) continue;
       // Guard against the wrong-direction projection: never auto-regress a
       // `done` plan back to `in-progress`.
-      if (row.direction === 'downgrade') continue;
-      yield* reconcilePlanStatus(row.name, row.derivedStatus === 'done', row.title);
+      if (row.direction === "downgrade") continue;
+      yield* reconcilePlanStatus(row.name, row.derivedStatus === "done", row.title);
       // Repairing a plan's status can flip its parent initiative's projection.
       yield* reconcileInitiativeForPlan(row.name);
       repaired.push(row);

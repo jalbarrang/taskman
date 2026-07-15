@@ -12,11 +12,11 @@
  * solely through the `FileSystem` seam built by `makePlanRuntime(root)`.
  */
 
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
-export const DEFAULT_PLANS_ROOT = '.taskman/plans';
-export const TASKMANRC_FILENAME = '.taskmanrc';
+export const DEFAULT_PLANS_ROOT = ".taskman/plans";
+export const TASKMANRC_FILENAME = ".taskmanrc";
 
 export interface ResolvedLedgerRoot {
   /**
@@ -25,7 +25,7 @@ export interface ResolvedLedgerRoot {
    */
   root: string;
   /** `taskmanrc` when read from a config file, else `default`. */
-  source: 'taskmanrc' | 'default';
+  source: "taskmanrc" | "default";
 }
 
 /**
@@ -38,9 +38,9 @@ export function resolveLedgerRoot(cwd?: string): ResolvedLedgerRoot {
 
   let text: string;
   try {
-    text = readFileSync(rcPath, 'utf-8');
+    text = readFileSync(rcPath, "utf-8");
   } catch {
-    return { root: DEFAULT_PLANS_ROOT, source: 'default' };
+    return { root: DEFAULT_PLANS_ROOT, source: "default" };
   }
 
   let parsed: unknown;
@@ -50,19 +50,19 @@ export function resolveLedgerRoot(cwd?: string): ResolvedLedgerRoot {
     const detail = cause instanceof Error ? cause.message : String(cause);
     throw new Error(`${TASKMANRC_FILENAME} is not valid JSON: ${detail}`);
   }
-  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     throw new Error(`${TASKMANRC_FILENAME} must be a JSON object.`);
   }
 
-  const raw = (parsed as Record<string, unknown>)['plans-root'];
-  if (raw === undefined) return { root: DEFAULT_PLANS_ROOT, source: 'default' };
-  if (typeof raw !== 'string' || raw.trim() === '') {
+  const raw = (parsed as Record<string, unknown>)["plans-root"];
+  if (raw === undefined) return { root: DEFAULT_PLANS_ROOT, source: "default" };
+  if (typeof raw !== "string" || raw.trim() === "") {
     throw new Error(`${TASKMANRC_FILENAME}: "plans-root" must be a non-empty string.`);
   }
 
-  const root = raw.trim().replace(/\/+$/, '');
-  if (root === '') {
+  const root = raw.trim().replace(/\/+$/, "");
+  if (root === "") {
     throw new Error(`${TASKMANRC_FILENAME}: "plans-root" must not be the filesystem root.`);
   }
-  return { root, source: 'taskmanrc' };
+  return { root, source: "taskmanrc" };
 }

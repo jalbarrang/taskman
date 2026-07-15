@@ -3,17 +3,17 @@
  * `/initiatives` command). The interactive pi handler lives in the extension.
  */
 
-import { Effect } from 'effect';
-import { FileSystem } from '../effects/filesystem.js';
-import { readPlansManifest, type PlanManifestEntry } from '../storage/plans-manifest.js';
+import { Effect } from "effect";
+import { FileSystem } from "../effects/filesystem.js";
+import { readPlansManifest, type PlanManifestEntry } from "../storage/plans-manifest.js";
 import {
   readInitiativesManifest,
   type InitiativeManifestEntry,
-} from '../storage/initiatives-manifest.js';
-import { initiativeRollup } from '../initiative.js';
-import type { InitiativeStatus } from '../types.js';
+} from "../storage/initiatives-manifest.js";
+import { initiativeRollup } from "../initiative.js";
+import type { InitiativeStatus } from "../types.js";
 
-export type StatusFilter = 'all' | InitiativeStatus;
+export type StatusFilter = "all" | InitiativeStatus;
 
 export interface InitiativeListItem {
   name: string;
@@ -30,25 +30,25 @@ export function filterInitiatives(
   items: InitiativeListItem[],
   filter: StatusFilter,
 ): InitiativeListItem[] {
-  if (filter === 'all') return items;
+  if (filter === "all") return items;
   return items.filter((i) => i.status === filter);
 }
 
 const STATUS_ICON: Record<InitiativeStatus, string> = {
-  'in-progress': '🔵',
-  done: '✅',
-  superseded: '🔄',
-  abandoned: '❌',
+  "in-progress": "🔵",
+  done: "✅",
+  superseded: "🔄",
+  abandoned: "❌",
 };
 
 export function formatInitiativeList(items: InitiativeListItem[], filter: StatusFilter): string {
   if (items.length === 0) {
-    return filter === 'all'
-      ? 'No initiatives found in the ledger (initiatives.jsonl)'
+    return filter === "all"
+      ? "No initiatives found in the ledger (initiatives.jsonl)"
       : `No initiatives with status "${filter}"`;
   }
   const header =
-    filter === 'all'
+    filter === "all"
       ? `All initiatives (${items.length})`
       : `Initiatives: ${filter} (${items.length})`;
   const lines = items.map((i) => {
@@ -56,11 +56,11 @@ export function formatInitiativeList(items: InitiativeListItem[], filter: Status
     const progress =
       i.totalPlans > 0
         ? ` [${i.donePlans}/${i.totalPlans} plans, ready ${i.ready}, blocked ${i.blocked}]`
-        : ' [no plans]';
+        : " [no plans]";
     const date = i.created_at.slice(0, 10);
     return `  ${icon} ${i.name} — ${i.title}${progress}  (${date})`;
   });
-  return `${header}\n${lines.join('\n')}`;
+  return `${header}\n${lines.join("\n")}`;
 }
 
 export function loadInitiativeListItems(): Effect.Effect<InitiativeListItem[], never, FileSystem> {
@@ -87,18 +87,18 @@ export function loadInitiativeListItems(): Effect.Effect<InitiativeListItem[], n
 }
 
 const FILTER_ALIASES: Record<string, StatusFilter> = {
-  all: 'all',
-  'in-progress': 'in-progress',
-  active: 'in-progress',
-  done: 'done',
-  completed: 'done',
-  superseded: 'superseded',
-  abandoned: 'abandoned',
+  all: "all",
+  "in-progress": "in-progress",
+  active: "in-progress",
+  done: "done",
+  completed: "done",
+  superseded: "superseded",
+  abandoned: "abandoned",
 };
 
 export function parseInitiativeFilter(raw: string): StatusFilter {
   for (const token of raw.toLowerCase().split(/\s+/)) {
     if (FILTER_ALIASES[token]) return FILTER_ALIASES[token];
   }
-  return 'all';
+  return "all";
 }
