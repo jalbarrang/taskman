@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/jalbarrang/taskman/compare/v0.7.1...v0.8.0) (2026-07-15)
+
+
+### Features
+
+* **mcp:** add Taskman stdio server ([6e6f5fb](https://github.com/jalbarrang/taskman/commit/6e6f5fb248a40c06b879725124e48881f01a7d15))
+
 ## [0.7.1](https://github.com/jalbarrang/taskman/compare/v0.7.0...v0.7.1) (2026-07-12)
 
 
