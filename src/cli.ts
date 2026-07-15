@@ -6,8 +6,8 @@
  * `--json` for machines.
  */
 
-import { CliError } from './cli/runtime.js';
-import { buildProgram } from './cli/program.js';
+import { CliError } from "./cli/runtime.js";
+import { buildProgram } from "./cli/program.js";
 
 export { buildProgram };
 

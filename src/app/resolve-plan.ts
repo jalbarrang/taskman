@@ -1,7 +1,7 @@
-import { join } from 'node:path';
-import { resolvePlanByName } from '../resolve.js';
-import { AppError } from './errors.js';
-import type { AppContext } from './context.js';
+import { join } from "node:path";
+import { resolvePlanByName } from "../resolve.js";
+import { AppError } from "./errors.js";
+import type { AppContext } from "./context.js";
 
 export interface PlanResolution {
   planName?: string;
@@ -21,20 +21,20 @@ export async function requirePlan(
   if (result.planName && result.planDir) return result as { planName: string; planDir: string };
   if (name) {
     throw new AppError(
-      'PLAN_NOT_FOUND',
-      `Plan "${name}" not found. In-progress plans: ${result.candidates.join(', ') || '(none)'}.`,
+      "PLAN_NOT_FOUND",
+      `Plan "${name}" not found. In-progress plans: ${result.candidates.join(", ") || "(none)"}.`,
       { candidates: result.candidates },
     );
   }
   if (result.candidates.length > 1) {
     throw new AppError(
-      'AMBIGUOUS_PLAN',
-      `Multiple in-progress plans — pass --plan <name>. Candidates: ${result.candidates.join(', ')}.`,
+      "AMBIGUOUS_PLAN",
+      `Multiple in-progress plans — pass --plan <name>. Candidates: ${result.candidates.join(", ")}.`,
       { candidates: result.candidates },
     );
   }
   throw new AppError(
-    'PLAN_NOT_FOUND',
-    `No in-progress plan found in ${join(context.displayRoot, 'plans.jsonl')}. Pass --plan <name>.`,
+    "PLAN_NOT_FOUND",
+    `No in-progress plan found in ${join(context.displayRoot, "plans.jsonl")}. Pass --plan <name>.`,
   );
 }

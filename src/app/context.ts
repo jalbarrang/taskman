@@ -1,11 +1,11 @@
-import { resolve } from 'node:path';
-import { resolveLedgerRoot } from '../config.js';
-import { makePlanRuntime, type RunPlanIO } from '../effects/runtime.js';
+import { resolve } from "node:path";
+import { resolveLedgerRoot } from "../config.js";
+import { makePlanRuntime, type RunPlanIO } from "../effects/runtime.js";
 
 export interface AppContext {
   readonly root: string;
   readonly displayRoot: string;
-  readonly source: 'default' | 'taskmanrc';
+  readonly source: "default" | "taskmanrc";
   readonly run: RunPlanIO;
 }
 

@@ -6,15 +6,15 @@
  * `--overview-file`, or stdin.
  */
 
-import { Effect } from 'effect';
-import { saveInitiative } from '../../storage/plan-storage.js';
+import { Effect } from "effect";
+import { saveInitiative } from "../../storage/plan-storage.js";
 import {
   readInitiativesManifest,
   upsertInitiativeEntry,
-} from '../../storage/initiatives-manifest.js';
-import { runPlanIO, displayPath, CliError } from '../runtime.js';
-import { resolveContent } from '../input.js';
-import { emit } from '../format.js';
+} from "../../storage/initiatives-manifest.js";
+import { runPlanIO, displayPath, CliError } from "../runtime.js";
+import { resolveContent } from "../input.js";
+import { emit } from "../format.js";
 
 const KEBAB = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -25,18 +25,16 @@ export async function createInitiativeCommand(opts: {
   overviewFile?: string;
   json?: boolean;
 }): Promise<void> {
-  if (!opts.name) throw new CliError('--name is required.');
-  if (!opts.title) throw new CliError('--title is required.');
+  if (!opts.name) throw new CliError("--name is required.");
+  if (!opts.title) throw new CliError("--title is required.");
   if (!KEBAB.test(opts.name)) {
-    throw new CliError(
-      `--name must be kebab-case (e.g. "auth-overhaul"), got "${opts.name}".`,
-    );
+    throw new CliError(`--name must be kebab-case (e.g. "auth-overhaul"), got "${opts.name}".`);
   }
 
   const name = opts.name;
   // Ledger-relative; the runtime roots it at the resolved plans root.
   const initiativeDir = name;
-  const overview = await resolveContent(opts.overview, opts.overviewFile, 'overview');
+  const overview = await resolveContent(opts.overview, opts.overviewFile, "overview");
 
   const existing = await runPlanIO(readInitiativesManifest());
   if (existing.some((entry) => entry.name === name)) {
@@ -48,7 +46,7 @@ export async function createInitiativeCommand(opts: {
   await runPlanIO(
     Effect.gen(function* () {
       yield* saveInitiative(initiativeDir, overview);
-      yield* upsertInitiativeEntry(name, { status: 'in-progress', title: opts.title! });
+      yield* upsertInitiativeEntry(name, { status: "in-progress", title: opts.title! });
     }),
   );
 

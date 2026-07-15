@@ -1,17 +1,17 @@
-import { Effect, Either, Option } from 'effect';
-import { FileSystem } from '../effects/filesystem.js';
-import { JsonlParseError, JsonlValidationError, PlanWriteError } from '../errors.js';
-import { decodePlanManifestEntry } from '../schema.js';
-import type { PlanStatus } from '../types.js';
-import { withFileLock } from './file-lock.js';
+import { Effect, Either, Option } from "effect";
+import { FileSystem } from "../effects/filesystem.js";
+import { JsonlParseError, JsonlValidationError, PlanWriteError } from "../errors.js";
+import { decodePlanManifestEntry } from "../schema.js";
+import type { PlanStatus } from "../types.js";
+import { withFileLock } from "./file-lock.js";
 
 // Paths are ledger-relative; the ledger folder itself is the FileSystem root
 // (see makePlanRuntime). '.' means "ensure the ledger root exists".
-const MANIFEST_DIR = '.';
-const MANIFEST_PATH = 'plans.jsonl';
+const MANIFEST_DIR = ".";
+const MANIFEST_PATH = "plans.jsonl";
 
 export interface PlanManifestEntry {
-  _type: 'plan';
+  _type: "plan";
   name: string;
   status: PlanStatus;
   title: string;
@@ -26,7 +26,7 @@ export interface PlanManifestEntry {
 
 /** A status is terminal (closed) when it is anything other than in-progress. */
 export function isTerminalStatus(status: PlanStatus): boolean {
-  return status !== 'in-progress';
+  return status !== "in-progress";
 }
 
 type ReadError = JsonlParseError | JsonlValidationError;
@@ -69,7 +69,7 @@ export function writePlansManifest(
     const fs = yield* FileSystem;
     yield* fs.makeDir(MANIFEST_DIR);
     const content =
-      entries.map((entry) => JSON.stringify(entry)).join('\n') + (entries.length ? '\n' : '');
+      entries.map((entry) => JSON.stringify(entry)).join("\n") + (entries.length ? "\n" : "");
     yield* fs.writeFileAtomic(MANIFEST_PATH, content);
   });
 }
@@ -99,10 +99,10 @@ export function applyPlanUpsert(
   const index = entries.findIndex((entry) => entry.name === name);
   const existing = index === -1 ? undefined : entries[index];
   const entry: PlanManifestEntry = {
-    _type: 'plan',
+    _type: "plan",
     name,
     status: updates.status,
-    title: updates.title ?? existing?.title ?? 'Untitled plan',
+    title: updates.title ?? existing?.title ?? "Untitled plan",
     created_at: existing?.created_at ?? now,
     // Terminal statuses record a completion timestamp; reopening clears it.
     completed_at: isTerminalStatus(updates.status) ? (existing?.completed_at ?? now) : null,
@@ -167,8 +167,8 @@ export function reconcilePlanStatus(
     // entry for an unregistered plan (orphans are surfaced, not auto-created).
     if (!existing) return false;
     // Do not resurrect / clobber an explicitly closed plan.
-    if (existing.status === 'superseded' || existing.status === 'abandoned') return false;
-    const status: PlanStatus = finalizable ? 'done' : 'in-progress';
+    if (existing.status === "superseded" || existing.status === "abandoned") return false;
+    const status: PlanStatus = finalizable ? "done" : "in-progress";
     if (existing.status === status) return false; // no change
     applyPlanUpsert(entries, name, { status, title });
     return true;

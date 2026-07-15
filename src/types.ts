@@ -2,22 +2,22 @@
  * Shared types for plan mode.
  */
 
-export type TaskStatus = 'pending' | 'done' | 'skipped' | 'blocked' | 'deferred';
+export type TaskStatus = "pending" | "done" | "skipped" | "blocked" | "deferred";
 
 /** Where a task came from: the original submitted plan, or discovered during execution. */
-export type TaskOrigin = 'plan' | 'discovered';
+export type TaskOrigin = "plan" | "discovered";
 
 /**
  * Plan lifecycle status. Only `in-progress` is active; `done`, `superseded`,
  * and `abandoned` are terminal and drop out of active-plan resolution.
  */
-export type PlanStatus = 'in-progress' | 'done' | 'superseded' | 'abandoned';
+export type PlanStatus = "in-progress" | "done" | "superseded" | "abandoned";
 
 /** Initiative lifecycle reuses the plan lifecycle literals. */
 export type InitiativeStatus = PlanStatus;
 
 export interface TaskRecord {
-  _type: 'task';
+  _type: "task";
   id: string;
   description: string;
   details?: string;
@@ -31,7 +31,7 @@ export interface TaskRecord {
 }
 
 export interface TaskMeta {
-  _type: 'meta';
+  _type: "meta";
   title: string;
   plan_name: string;
   created_at: string;
@@ -52,7 +52,7 @@ export interface PlanData {
   base_commit?: string;
 }
 
-export type ThinkingLevel = 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+export type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
 
 export interface ExecPendingConfig {
   model: { provider: string; id: string };

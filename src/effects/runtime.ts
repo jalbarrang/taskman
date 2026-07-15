@@ -6,9 +6,9 @@
  * `await fn(...)` shape.
  */
 
-import { Effect, Layer } from 'effect';
-import { DEFAULT_PLANS_ROOT } from '../config.js';
-import { FileSystem, makeNodeFileSystemService } from './filesystem.js';
+import { Effect, Layer } from "effect";
+import { DEFAULT_PLANS_ROOT } from "../config.js";
+import { FileSystem, makeNodeFileSystemService } from "./filesystem.js";
 
 /**
  * Build the live filesystem layer. `root` is the ledger folder itself — the

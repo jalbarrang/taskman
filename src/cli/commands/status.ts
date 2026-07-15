@@ -1,9 +1,9 @@
 /** `taskman status` adapter. */
 
-import { getPlanStatus } from '../../app/status.js';
-import type { TaskStatus } from '../../types.js';
-import { getAppContext } from '../runtime.js';
-import { STATUS_GLYPH, emit } from '../format.js';
+import { getPlanStatus } from "../../app/status.js";
+import type { TaskStatus } from "../../types.js";
+import { getAppContext } from "../runtime.js";
+import { STATUS_GLYPH, emit } from "../format.js";
 
 export async function statusCommand(opts: { plan?: string; json?: boolean }): Promise<void> {
   const plan = await getPlanStatus(getAppContext(), { plan: opts.plan });
@@ -20,8 +20,8 @@ export async function statusCommand(opts: { plan?: string; json?: boolean }): Pr
   );
   const human =
     `Plan: ${plan.title} (${plan.planName})\n` +
-    `Progress: ${resolved}/${plan.tasks.length} resolved — ${parts.join(', ')}\n` +
-    `Tasks:\n${lines.join('\n')}`;
+    `Progress: ${resolved}/${plan.tasks.length} resolved — ${parts.join(", ")}\n` +
+    `Tasks:\n${lines.join("\n")}`;
   emit(
     Boolean(opts.json),
     {

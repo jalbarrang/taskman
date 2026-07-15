@@ -1,8 +1,8 @@
 /** `taskman add-task <description>` adapter. */
 
-import { addDeferredTask } from '../../app/tasks.js';
-import { getAppContext } from '../runtime.js';
-import { emit } from '../format.js';
+import { addDeferredTask } from "../../app/tasks.js";
+import { getAppContext } from "../runtime.js";
+import { emit } from "../format.js";
 
 export async function addTaskCommand(
   description: string,

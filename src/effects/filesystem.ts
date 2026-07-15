@@ -6,11 +6,11 @@
  * all failure modes typed (`PlanReadError` / `PlanWriteError`).
  */
 
-import { Context, Effect } from 'effect';
-import { mkdir, readFile, readdir, unlink, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
-import { PlanReadError, PlanWriteError } from '../errors.js';
-import { writeFileAtomic } from '../storage/atomic-write.js';
+import { Context, Effect } from "effect";
+import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { PlanReadError, PlanWriteError } from "../errors.js";
+import { writeFileAtomic } from "../storage/atomic-write.js";
 
 export interface FileSystemService {
   readonly readFileString: (path: string) => Effect.Effect<string, PlanReadError>;
@@ -21,7 +21,7 @@ export interface FileSystemService {
   readonly removeFile: (path: string) => Effect.Effect<void, PlanWriteError>;
 }
 
-export class FileSystem extends Context.Tag('PlanMode/FileSystem')<
+export class FileSystem extends Context.Tag("PlanMode/FileSystem")<
   FileSystem,
   FileSystemService
 >() {}
@@ -40,13 +40,13 @@ export function makeNodeFileSystemService(root: string): FileSystemService {
   return {
     readFileString: (path) =>
       Effect.tryPromise({
-        try: () => readFile(at(path), 'utf-8'),
+        try: () => readFile(at(path), "utf-8"),
         catch: (cause) => new PlanReadError({ path, cause }),
       }),
 
     writeFileString: (path, data) =>
       Effect.tryPromise({
-        try: () => writeFile(at(path), data, 'utf-8'),
+        try: () => writeFile(at(path), data, "utf-8"),
         catch: (cause) => new PlanWriteError({ path, cause }),
       }),
 
@@ -82,4 +82,4 @@ export function makeNodeFileSystemService(root: string): FileSystemService {
  * directory at call time. Kept for consumers that manage their own paths; the
  * plan-runtime default is the ledger root (see `makeRuntimeLayer`).
  */
-export const nodeFileSystemService: FileSystemService = makeNodeFileSystemService('.');
+export const nodeFileSystemService: FileSystemService = makeNodeFileSystemService(".");

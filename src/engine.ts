@@ -5,21 +5,21 @@
  * rather than re-implementing the write→reconcile sequence.
  */
 
-import { Effect } from 'effect';
-import { FileSystem } from './effects/filesystem.js';
+import { Effect } from "effect";
+import { FileSystem } from "./effects/filesystem.js";
 import type {
   JsonlParseError,
   JsonlValidationError,
   MissingMetaRecord,
   PlanWriteError,
-} from './errors.js';
-import { TaskNotFound, TasksFileNotFound } from './errors.js';
-import { readTasksJsonl, writeTasksJsonl } from './storage/task-storage.js';
-import { reconcilePlanStatus } from './storage/plans-manifest.js';
-import { reconcileInitiativeForPlan } from './initiative.js';
-import { isPlanFinalizable } from './task-status.js';
-import { nextTaskId } from './ids.js';
-import type { TaskRecord, TaskStatus } from './types.js';
+} from "./errors.js";
+import { TaskNotFound, TasksFileNotFound } from "./errors.js";
+import { readTasksJsonl, writeTasksJsonl } from "./storage/task-storage.js";
+import { reconcilePlanStatus } from "./storage/plans-manifest.js";
+import { reconcileInitiativeForPlan } from "./initiative.js";
+import { isPlanFinalizable } from "./task-status.js";
+import { nextTaskId } from "./ids.js";
+import type { TaskRecord, TaskStatus } from "./types.js";
 
 type ReadError = JsonlParseError | JsonlValidationError | MissingMetaRecord;
 type WriteFlowError = ReadError | PlanWriteError | TasksFileNotFound;
@@ -90,12 +90,12 @@ export function appendDeferredTask(
 
     const now = new Date().toISOString();
     const task: TaskRecord = {
-      _type: 'task',
+      _type: "task",
       id: nextTaskId(snapshot.tasks.map((t) => t.id)),
       description: input.description.slice(0, 60),
-      details: input.details ?? '',
-      status: 'deferred',
-      origin: 'discovered',
+      details: input.details ?? "",
+      status: "deferred",
+      origin: "discovered",
       depends_on: input.depends_on,
       notes: input.reason,
       created_at: now,

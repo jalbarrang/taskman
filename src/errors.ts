@@ -6,9 +6,9 @@
  * the tool boundary via `errorMessage`.
  */
 
-import { Data } from 'effect';
+import { Data } from "effect";
 
-export class PlanReadError extends Data.TaggedError('PlanReadError')<{
+export class PlanReadError extends Data.TaggedError("PlanReadError")<{
   readonly path: string;
   readonly cause: unknown;
 }> {
@@ -17,7 +17,7 @@ export class PlanReadError extends Data.TaggedError('PlanReadError')<{
   }
 }
 
-export class PlanWriteError extends Data.TaggedError('PlanWriteError')<{
+export class PlanWriteError extends Data.TaggedError("PlanWriteError")<{
   readonly path: string;
   readonly cause: unknown;
 }> {
@@ -26,7 +26,7 @@ export class PlanWriteError extends Data.TaggedError('PlanWriteError')<{
   }
 }
 
-export class JsonlParseError extends Data.TaggedError('JsonlParseError')<{
+export class JsonlParseError extends Data.TaggedError("JsonlParseError")<{
   readonly path: string;
   readonly line: number;
   readonly cause?: unknown;
@@ -36,7 +36,7 @@ export class JsonlParseError extends Data.TaggedError('JsonlParseError')<{
   }
 }
 
-export class JsonlValidationError extends Data.TaggedError('JsonlValidationError')<{
+export class JsonlValidationError extends Data.TaggedError("JsonlValidationError")<{
   readonly path: string;
   readonly line: number;
   readonly reason: string;
@@ -46,7 +46,7 @@ export class JsonlValidationError extends Data.TaggedError('JsonlValidationError
   }
 }
 
-export class MissingMetaRecord extends Data.TaggedError('MissingMetaRecord')<{
+export class MissingMetaRecord extends Data.TaggedError("MissingMetaRecord")<{
   readonly path: string;
 }> {
   get message(): string {
@@ -54,7 +54,7 @@ export class MissingMetaRecord extends Data.TaggedError('MissingMetaRecord')<{
   }
 }
 
-export class TaskNotFound extends Data.TaggedError('TaskNotFound')<{
+export class TaskNotFound extends Data.TaggedError("TaskNotFound")<{
   readonly planDir: string;
   readonly taskId: string;
 }> {
@@ -63,7 +63,7 @@ export class TaskNotFound extends Data.TaggedError('TaskNotFound')<{
   }
 }
 
-export class TasksFileNotFound extends Data.TaggedError('TasksFileNotFound')<{
+export class TasksFileNotFound extends Data.TaggedError("TasksFileNotFound")<{
   readonly planDir: string;
 }> {
   get message(): string {
@@ -87,9 +87,9 @@ export function causeMessage(cause: unknown): string {
 
 export function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
-  if (typeof error === 'object' && error !== null && 'message' in error) {
+  if (typeof error === "object" && error !== null && "message" in error) {
     const message = (error as { message?: unknown }).message;
-    if (typeof message === 'string') return message;
+    if (typeof message === "string") return message;
   }
   return String(error);
 }
@@ -98,7 +98,7 @@ export function errorMessage(error: unknown): string {
 export function toNativeError(error: unknown): Error {
   if (error instanceof Error) return error;
   const native = new Error(errorMessage(error));
-  if (typeof error === 'object' && error !== null && '_tag' in error) {
+  if (typeof error === "object" && error !== null && "_tag" in error) {
     native.name = String((error as { _tag: unknown })._tag);
   }
   return native;

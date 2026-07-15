@@ -19,7 +19,7 @@
  * but cross-process registry coordination is out of scope.
  */
 
-import { Effect } from 'effect';
+import { Effect } from "effect";
 
 const locks = new Map<string, Effect.Semaphore>();
 

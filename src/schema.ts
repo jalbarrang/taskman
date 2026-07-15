@@ -7,14 +7,14 @@
  * structurally compatible with the decoded values.
  */
 
-import { Schema } from 'effect';
+import { Schema } from "effect";
 
-export const TaskStatusSchema = Schema.Literal('pending', 'done', 'skipped', 'blocked', 'deferred');
+export const TaskStatusSchema = Schema.Literal("pending", "done", "skipped", "blocked", "deferred");
 
-export const TaskOriginSchema = Schema.Literal('plan', 'discovered');
+export const TaskOriginSchema = Schema.Literal("plan", "discovered");
 
 export const TaskRecordSchema = Schema.Struct({
-  _type: Schema.Literal('task'),
+  _type: Schema.Literal("task"),
   id: Schema.String,
   description: Schema.String,
   details: Schema.optional(Schema.String),
@@ -27,7 +27,7 @@ export const TaskRecordSchema = Schema.Struct({
 });
 
 export const TaskMetaSchema = Schema.Struct({
-  _type: Schema.Literal('meta'),
+  _type: Schema.Literal("meta"),
   title: Schema.String,
   plan_name: Schema.String,
   created_at: Schema.String,
@@ -46,10 +46,10 @@ export const TasksLineSchema = Schema.Union(TaskMetaSchema, TaskRecordSchema);
  *   - abandoned:   closed without shipping (rejected / won't do)
  * Only `in-progress` is treated as active; the rest are terminal.
  */
-export const PlanStatusSchema = Schema.Literal('in-progress', 'done', 'superseded', 'abandoned');
+export const PlanStatusSchema = Schema.Literal("in-progress", "done", "superseded", "abandoned");
 
 export const PlanManifestEntrySchema = Schema.Struct({
-  _type: Schema.Literal('plan'),
+  _type: Schema.Literal("plan"),
   name: Schema.String,
   status: PlanStatusSchema,
   title: Schema.String,
@@ -74,7 +74,7 @@ export const PlanManifestEntrySchema = Schema.Struct({
 export const InitiativeStatusSchema = PlanStatusSchema;
 
 export const InitiativeManifestEntrySchema = Schema.Struct({
-  _type: Schema.Literal('initiative'),
+  _type: Schema.Literal("initiative"),
   name: Schema.String,
   status: InitiativeStatusSchema,
   title: Schema.String,

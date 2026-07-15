@@ -13,15 +13,15 @@
  *     direction one-way: initiative.ts → {plans-manifest, initiatives-manifest}.
  */
 
-import { Effect } from 'effect';
-import { FileSystem } from './effects/filesystem.js';
-import type { JsonlParseError, JsonlValidationError, PlanWriteError } from './errors.js';
-import { readPlansManifest, type PlanManifestEntry } from './storage/plans-manifest.js';
+import { Effect } from "effect";
+import { FileSystem } from "./effects/filesystem.js";
+import type { JsonlParseError, JsonlValidationError, PlanWriteError } from "./errors.js";
+import { readPlansManifest, type PlanManifestEntry } from "./storage/plans-manifest.js";
 import {
   applyInitiativeUpsert,
   mutateInitiativesManifest,
-} from './storage/initiatives-manifest.js';
-import type { PlanStatus } from './types.js';
+} from "./storage/initiatives-manifest.js";
+import type { PlanStatus } from "./types.js";
 
 // ── Pure: readiness + projection rules ───────────────────────────────────────
 
@@ -41,10 +41,10 @@ export interface PlanReadiness {
 export function computePlanReadiness(plans: readonly PlanManifestEntry[]): PlanReadiness[] {
   const statusByName = new Map(plans.map((plan) => [plan.name, plan.status]));
   return plans
-    .filter((plan) => plan.status === 'in-progress')
+    .filter((plan) => plan.status === "in-progress")
     .map((plan) => {
       const deps = plan.depends_on ?? [];
-      const blockedBy = deps.filter((dep) => statusByName.get(dep) !== 'done');
+      const blockedBy = deps.filter((dep) => statusByName.get(dep) !== "done");
       return { name: plan.name, ready: blockedBy.length === 0, blockedBy };
     });
 }
@@ -68,7 +68,7 @@ export function isInitiativeFinalizable(
 ): boolean {
   const members = membersOf(initiative, plans);
   if (members.length === 0) return false;
-  return members.every((plan) => plan.status !== 'in-progress');
+  return members.every((plan) => plan.status !== "in-progress");
 }
 
 export interface InitiativeMemberRow {
@@ -107,12 +107,12 @@ export function initiativeRollup(
   let blocked = 0;
 
   const rows: InitiativeMemberRow[] = members.map((plan) => {
-    if (plan.status === 'done') done += 1;
-    else if (plan.status === 'in-progress') inProgress += 1;
+    if (plan.status === "done") done += 1;
+    else if (plan.status === "in-progress") inProgress += 1;
     else closed += 1; // superseded / abandoned
 
     const row: InitiativeMemberRow = { name: plan.name, title: plan.title, status: plan.status };
-    if (plan.status === 'in-progress') {
+    if (plan.status === "in-progress") {
       const r = readiness.get(plan.name);
       row.ready = r?.ready ?? true;
       row.blockedBy = r?.blockedBy ?? [];
@@ -154,9 +154,9 @@ export function reconcileInitiativeStatus(
     Effect.gen(function* () {
       const existing = initiatives.find((entry) => entry.name === name);
       if (!existing) return false;
-      if (existing.status === 'superseded' || existing.status === 'abandoned') return false;
+      if (existing.status === "superseded" || existing.status === "abandoned") return false;
       const plans = yield* readPlansManifest();
-      const status: PlanStatus = isInitiativeFinalizable(name, plans) ? 'done' : 'in-progress';
+      const status: PlanStatus = isInitiativeFinalizable(name, plans) ? "done" : "in-progress";
       if (existing.status === status) return false;
       applyInitiativeUpsert(initiatives, name, { status, title: existing.title });
       return true;

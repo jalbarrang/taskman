@@ -1,10 +1,10 @@
 /** Shared CLI adapters over the application context. */
 
-import { join } from 'node:path';
-import { type ResolvedLedgerRoot } from '../config.js';
-import { type RunPlanIO } from '../effects/runtime.js';
-import { makeAppContext, type AppContext } from '../app/context.js';
-import { requirePlan } from '../app/resolve-plan.js';
+import { join } from "node:path";
+import { type ResolvedLedgerRoot } from "../config.js";
+import { type RunPlanIO } from "../effects/runtime.js";
+import { makeAppContext, type AppContext } from "../app/context.js";
+import { requirePlan } from "../app/resolve-plan.js";
 
 let context: AppContext | undefined;
 let contextCwd: string | undefined;
@@ -29,7 +29,7 @@ export function displayPath(...segments: string[]): string {
   return join(getAppContext().displayRoot, ...segments);
 }
 
-export { AppError as CliError } from '../app/errors.js';
+export { AppError as CliError } from "../app/errors.js";
 
 export async function resolvePlanDir(
   name?: string,

@@ -42,8 +42,14 @@ test("serves the bound ledger over clean Node stdio", async () => {
   await client.connect(transport);
   const tools = await client.listTools();
   expect(tools.tools.map((tool) => tool.name).sort()).toEqual([
-    "taskman_add_task", "taskman_close", "taskman_create_plan", "taskman_list",
-    "taskman_reconcile", "taskman_revise_plan", "taskman_status", "taskman_update_task",
+    "taskman_add_task",
+    "taskman_close",
+    "taskman_create_plan",
+    "taskman_list",
+    "taskman_reconcile",
+    "taskman_revise_plan",
+    "taskman_status",
+    "taskman_update_task",
   ]);
   const status = await client.callTool({ name: "taskman_status", arguments: { plan: "alpha" } });
   expect(status.structuredContent).toMatchObject({ resolved: true, plan: { name: "alpha" } });

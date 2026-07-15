@@ -5,10 +5,10 @@
  * they are excluded from "resolved" checks but block plan finalization.
  */
 
-import type { TaskRecord } from './types.js';
+import type { TaskRecord } from "./types.js";
 
 export function deferredTasks(tasks: readonly TaskRecord[]): TaskRecord[] {
-  return tasks.filter((task) => task.status === 'deferred');
+  return tasks.filter((task) => task.status === "deferred");
 }
 
 /**
@@ -17,7 +17,7 @@ export function deferredTasks(tasks: readonly TaskRecord[]): TaskRecord[] {
  */
 export function activeTasksResolved(tasks: readonly TaskRecord[]): boolean {
   return tasks.every(
-    (task) => task.status === 'done' || task.status === 'skipped' || task.status === 'deferred',
+    (task) => task.status === "done" || task.status === "skipped" || task.status === "deferred",
   );
 }
 
@@ -26,7 +26,7 @@ export function activeTasksResolved(tasks: readonly TaskRecord[]): boolean {
  * are no deferred follow-ups awaiting the user's decision.
  */
 export function isPlanFinalizable(tasks: readonly TaskRecord[]): boolean {
-  return activeTasksResolved(tasks) && !tasks.some((task) => task.status === 'deferred');
+  return activeTasksResolved(tasks) && !tasks.some((task) => task.status === "deferred");
 }
 
 /**
@@ -36,8 +36,8 @@ export function isPlanFinalizable(tasks: readonly TaskRecord[]): boolean {
 export function reactivateForExecution(tasks: TaskRecord[], timestamp: string): boolean {
   let changed = false;
   for (const task of tasks) {
-    if (task.status === 'blocked' || task.status === 'deferred') {
-      task.status = 'pending';
+    if (task.status === "blocked" || task.status === "deferred") {
+      task.status = "pending";
       task.updated_at = timestamp;
       changed = true;
     }
