@@ -42,18 +42,18 @@
     "format": "oxfmt --write src"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.29.0",
+    "@modelcontextprotocol/sdk": "1.30.0",
     "commander": "^15.0.0",
-    "effect": "^3.21.4",
-    "zod": "^4.3.5"
+    "effect": "^3.22.1",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@tanstack/intent": "^0.3.5",
+    "@tanstack/intent": "^0.4.0",
     "@types/node": "26",
     "bun-types": "latest",
-    "oxfmt": "^0.58.0",
-    "oxlint": "^1.73.0",
-    "tsdown": "^0.22.5",
+    "oxfmt": "^0.66.0",
+    "oxlint": "^1.81.0",
+    "tsdown": "^0.23.0",
     "typescript": "^7.0.2"
   }
 }
