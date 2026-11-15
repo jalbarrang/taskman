@@ -84,11 +84,6 @@ export const InitiativeManifestEntrySchema = Schema.Struct({
   reason: Schema.optional(Schema.String),
 });
 
-export const ExecPendingConfigSchema = Schema.Struct({
-  model: Schema.Struct({ provider: Schema.String, id: Schema.String }),
-  thinking: Schema.String,
-});
-
 export const decodeTaskRecord = Schema.decodeUnknownEither(TaskRecordSchema);
 export const decodeTaskMeta = Schema.decodeUnknownEither(TaskMetaSchema);
 export const decodeTasksLine = Schema.decodeUnknownEither(TasksLineSchema);
@@ -96,4 +91,3 @@ export const decodePlanManifestEntry = Schema.decodeUnknownEither(PlanManifestEn
 export const decodeInitiativeManifestEntry = Schema.decodeUnknownEither(
   InitiativeManifestEntrySchema,
 );
-export const decodeExecPendingConfig = Schema.decodeUnknownEither(ExecPendingConfigSchema);

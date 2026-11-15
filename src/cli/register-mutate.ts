@@ -24,7 +24,7 @@ export function registerMutateCommands(program: Command): void {
     .command("add-task")
     .description("Append a deferred follow-up task")
     .argument("<description>", "short task label")
-    .requiredOption("--reason <text>", "why this follow-up matters")
+    .option("--reason <text>", "why this follow-up matters (optional)")
     .option("--plan <name>", "plan to target")
     .option("--details <text>", "fuller implementation notes")
     .option("--json", "machine-readable JSON output")

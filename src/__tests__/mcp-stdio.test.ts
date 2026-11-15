@@ -30,7 +30,6 @@ test("serves the bound ledger over clean Node stdio", async () => {
   await createPlan(makeAppContext(dir), {
     name: "alpha",
     title: "Alpha",
-    handoff: "# Alpha",
     tasks: [{ id: "t-001", description: "first" }],
   });
   const transport = new StdioClientTransport({

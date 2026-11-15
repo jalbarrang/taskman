@@ -1,12 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { chdir } from "node:process";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { makePlanRuntime } from "../effects/runtime.js";
 import { upsertPlanEntry } from "../storage/plans-manifest.js";
 import { writeTasksJsonl, readTasksJsonl } from "../storage/task-storage.js";
-import { saveHandoff } from "../storage/plan-storage.js";
 import type { TaskMeta, TaskRecord } from "../types.js";
 import { revisePlanCommand } from "../cli/commands/revise-plan.js";
 import { CliError } from "../cli/runtime.js";
@@ -44,7 +43,6 @@ beforeEach(async () => {
   await run(
     writeTasksJsonl("p", meta, [task("t-001", { status: "done", notes: "x" }), task("t-002")]),
   );
-  await run(saveHandoff("p", "# Original handoff"));
 });
 
 afterEach(async () => {
@@ -78,9 +76,8 @@ describe("revise-plan", () => {
     expect(snap?.tasks.find((t) => t.id === "t-001")?.notes).toBe("x");
   });
 
-  test("title-only revise leaves handoff and tasks intact", async () => {
+  test("title-only revise leaves tasks intact", async () => {
     await revisePlanCommand({ plan: "p", title: "Just Title" });
-    expect(await readFile(".taskman/plans/p/HANDOFF.md", "utf8")).toBe("# Original handoff");
     const snap = await run(readTasksJsonl("p"));
     expect(snap?.tasks).toHaveLength(2);
     expect(snap?.tasks.find((t) => t.id === "t-001")?.notes).toBe("x");

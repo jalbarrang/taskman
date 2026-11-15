@@ -1,6 +1,5 @@
 import { Effect } from "effect";
 import { reconcileInitiativeForPlan, reconcileInitiativeStatus } from "../initiative.js";
-import { saveHandoff } from "../storage/plan-storage.js";
 import {
   readPlansManifest,
   reconcilePlanStatus,
@@ -15,13 +14,12 @@ export function persistRevisedPlan(args: {
   planDir: string;
   plan: PlanData;
   title: string;
-  handoff: string;
   tasks: TaskRecord[];
   initiative?: string;
   dependsOnPlans?: string[];
   now: string;
 }): Effect.Effect<void, unknown, FileSystem> {
-  const { planDir, plan, title, handoff, tasks, initiative, dependsOnPlans, now } = args;
+  const { planDir, plan, title, tasks, initiative, dependsOnPlans, now } = args;
   const meta: TaskMeta = {
     _type: "meta",
     title,
@@ -31,7 +29,6 @@ export function persistRevisedPlan(args: {
   };
   return Effect.gen(function* () {
     yield* writeTasksJsonl(planDir, meta, tasks);
-    yield* saveHandoff(planDir, handoff);
     const current = (yield* readPlansManifest()).find((entry) => entry.name === plan.planName);
     const oldInitiative = current?.initiative;
     yield* upsertPlanEntry(plan.planName, {

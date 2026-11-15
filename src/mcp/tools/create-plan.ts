@@ -24,8 +24,7 @@ export function registerCreatePlan(server: McpServer, context: McpContext): void
           const result = await createPlan(context.app, {
             name: input.name,
             title: input.title,
-            handoff: input.handoff,
-            tasks: input.tasks,
+            tasks: input.tasks ?? [],
             initiative: input.initiative,
             dependsOnPlans: input.depends_on_plans,
           });

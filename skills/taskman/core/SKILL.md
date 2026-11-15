@@ -1,20 +1,22 @@
 ---
-name: taskman/core
+name: core
 description: >
   Drive the taskman CLI and engine over a JSONL plan ledger (default
   .taskman/plans/, configurable via .taskmanrc) — plans, initiatives, and
-  tasks. Load when running `taskman` commands (create-plan, create-handoff,
-  status, list, update-task, add-task, reconcile, close, root), tracking
+  tasks. Load when running `taskman` commands (create-plan, revise-plan,
+  create-initiative, status, list, initiative-status, update-task, add-task,
+  reconcile, close, root), tracking
   plan/task progress across sessions or harnesses, or calling
   @dreki-gg/taskman as a library. Covers the status-is-a-projection model,
   stateless plan resolution, ledger-root discovery, and reconcile.
-type: core
-library: "@dreki-gg/taskman"
-library_version: "0.6.0"
+metadata:
+  type: core
+  library: "@dreki-gg/taskman"
+  library_version: "0.8.0"
 sources:
-  - "dreki-gg/pi-extensions:packages/taskman/README.md"
-  - "dreki-gg/pi-extensions:packages/taskman/src/cli.ts"
-  - "dreki-gg/pi-extensions:packages/taskman/src/engine.ts"
+  - "jalbarrang/taskman:README.md"
+  - "jalbarrang/taskman:src/cli.ts"
+  - "jalbarrang/taskman:src/engine.ts"
 ---
 
 # taskman
@@ -42,7 +44,7 @@ the current directory by default:
 - `<root>/plans.jsonl` — plan registry
 - `<root>/initiatives.jsonl` — initiative registry (initiatives group plans)
 - `<root>/<plan>/tasks.jsonl` — one plan's tasks (first line is metadata)
-- `<root>/<plan>/HANDOFF.md`, `<root>/<initiative>/INITIATIVE.md` — prose
+- `<root>/<initiative>/INITIATIVE.md` — the initiative overview
 
 ### Discovering / configuring the root
 
@@ -79,15 +81,18 @@ taskman reconcile --apply       # repair safe (in-progress→done) drift
 ### Creating plans from any harness
 
 Plans don't have to originate in plan-mode's `submit_plan` tool. The CLI creates
-the same durable artifacts (tasks.jsonl + HANDOFF.md + registry entry) so a
-foreign harness can seed the ledger directly. Handoff/task payloads accept an
-inline value, a `--*-file <path>`, or piped stdin.
+the same durable artifacts (tasks.jsonl + registry entry) so a foreign harness
+can seed the ledger directly. Task payloads accept an inline value or a
+`--tasks-file <path>` (`-` reads stdin).
 
 ```bash
-echo "$MARKDOWN" | taskman create-plan --name my-plan --title "My Plan" \
-  --handoff-file - --tasks '[{"description":"do it"}]'   # tasks get t-NNN ids
-taskman create-handoff --plan my-plan --file HANDOFF.md   # write/replace prose
+taskman create-plan --name my-plan --title "My Plan" \
+  --tasks '[{"description":"do it"}]'   # tasks get t-NNN ids
+taskman revise-plan --plan my-plan --tasks-file TASKS.json   # rewrite the task list
 ```
+
+`--name` is optional (it defaults to a kebab-case of `--title`), and omitting
+`--tasks` creates an empty project you can fill with `add-task`.
 
 Use `--initiative <name>` to link the plan (create the initiative first) and
 `--depends-on a,b` for plan-level ordering. Task creation here is plan setup —

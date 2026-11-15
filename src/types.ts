@@ -46,25 +46,9 @@ export interface TaskMeta {
 export interface PlanData {
   title: string;
   planName: string;
-  handoff: string;
   tasks: TaskRecord[];
   /** Git commit the plan was written against; powers the executor drift check. */
   base_commit?: string;
-}
-
-export type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
-
-export interface ExecPendingConfig {
-  model: { provider: string; id: string };
-  thinking: string;
-}
-
-export interface PersistedState {
-  planEnabled: boolean;
-  executing: boolean;
-  planDir: string | undefined;
-  plan: PlanData | undefined;
-  executionStartIdx: number | undefined;
 }
 
 // Record validation lives in `schema.ts` (Effect Schema). The interfaces above

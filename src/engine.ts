@@ -92,7 +92,7 @@ export function setTaskStatus(
 
 export interface AddTaskInput {
   description: string;
-  reason: string;
+  reason?: string;
   details?: string;
   depends_on?: string[];
 }

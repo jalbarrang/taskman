@@ -6,7 +6,6 @@ import { tmpdir } from "node:os";
 import { makePlanRuntime } from "../effects/runtime.js";
 import { upsertPlanEntry } from "../storage/plans-manifest.js";
 import { writeTasksJsonl } from "../storage/task-storage.js";
-import { saveHandoff } from "../storage/plan-storage.js";
 import { resolvePlanByName, loadPlanData, normalizePlanName } from "../resolve.js";
 import type { TaskMeta, TaskRecord } from "../types.js";
 
@@ -92,13 +91,11 @@ describe("resolvePlanByName", () => {
 });
 
 describe("loadPlanData", () => {
-  test("builds plan data including handoff", async () => {
+  test("builds plan data from the task snapshot", async () => {
     await makePlan("p");
-    await run(saveHandoff("p", "# Handoff"));
     const data = await run(loadPlanData("p"));
     expect(data?.planName).toBe("p");
     expect(data?.title).toBe("Title p");
-    expect(data?.handoff).toBe("# Handoff");
     expect(data?.tasks).toHaveLength(1);
   });
 

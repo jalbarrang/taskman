@@ -12,7 +12,6 @@ export async function mcpFixture() {
   await createPlan(app, {
     name: "alpha",
     title: "Alpha",
-    handoff: "# Alpha",
     tasks: [
       { id: "t-001", description: "first" },
       { id: "t-002", description: "second" },

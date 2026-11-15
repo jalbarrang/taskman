@@ -17,8 +17,6 @@ export type {
   TaskRecord,
   TaskMeta,
   PlanData,
-  ExecPendingConfig,
-  ThinkingLevel,
 } from "./types.js";
 export * from "./errors.js";
 

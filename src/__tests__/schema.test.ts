@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { Either } from "effect";
 import {
-  decodeExecPendingConfig,
   decodeInitiativeManifestEntry,
   decodePlanManifestEntry,
   decodeTaskMeta,
@@ -321,23 +320,6 @@ describe("initiative manifest entry schema", () => {
         },
         decodeInitiativeManifestEntry,
       ),
-    ).toBe(false);
-  });
-});
-
-describe("exec pending config schema", () => {
-  test("accepts a valid config", () => {
-    expect(
-      isOk(
-        { model: { provider: "anthropic", id: "opus" }, thinking: "low" },
-        decodeExecPendingConfig,
-      ),
-    ).toBe(true);
-  });
-
-  test("rejects a config missing the model id", () => {
-    expect(
-      isOk({ model: { provider: "anthropic" }, thinking: "low" }, decodeExecPendingConfig),
     ).toBe(false);
   });
 });

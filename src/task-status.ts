@@ -22,11 +22,16 @@ export function activeTasksResolved(tasks: readonly TaskRecord[]): boolean {
 }
 
 /**
- * True when the plan can be marked complete: active work is resolved AND there
- * are no deferred follow-ups awaiting the user's decision.
+ * True when the plan can be marked complete: it has at least one task, active
+ * work is resolved, and no deferred follow-ups await the user's decision. An
+ * empty project is never finalizable.
  */
 export function isPlanFinalizable(tasks: readonly TaskRecord[]): boolean {
-  return activeTasksResolved(tasks) && !tasks.some((task) => task.status === "deferred");
+  return (
+    tasks.length > 0 &&
+    activeTasksResolved(tasks) &&
+    !tasks.some((task) => task.status === "deferred")
+  );
 }
 
 /**

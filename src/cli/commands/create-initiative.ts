@@ -1,9 +1,8 @@
 /**
  * `taskman create-initiative` — create an initiative that groups multiple plans.
  *
- * CLI sibling of plan-mode's `submit_initiative`: writes INITIATIVE.md and an
- * initiatives.jsonl registry entry. Overview comes from `--overview`,
- * `--overview-file`, or stdin.
+ * CLI entry for initiatives: writes INITIATIVE.md and an initiatives.jsonl
+ * registry entry. Overview comes from `--overview`, `--overview-file`, or stdin.
  */
 
 import { Effect } from "effect";

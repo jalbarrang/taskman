@@ -2,8 +2,8 @@
  * Process-wide keyed mutex for serializing read-modify-write on shared files.
  *
  * Pi runs every tool call in a single Node process. When several tool calls run
- * in one block (e.g. three `submit_initiative` calls, or concurrent
- * `submit_plan` / `revise_plan`), each does an independent
+ * in one block (e.g. three `create-initiative` calls, or concurrent
+ * `create-plan` / `revise-plan`), each does an independent
  * read → modify → write against the same registry file. Without serialization
  * their reads all observe the same starting state and the last write clobbers
  * the rest — a classic lost-update race.

@@ -16,7 +16,6 @@ import { FileSystem } from "./effects/filesystem.js";
 import type { JsonlParseError, JsonlValidationError, MissingMetaRecord } from "./errors.js";
 import { readPlansManifest } from "./storage/plans-manifest.js";
 import { readTasksJsonl } from "./storage/task-storage.js";
-import { loadHandoff } from "./storage/plan-storage.js";
 import type { PlanData } from "./types.js";
 
 export interface ResolvedPlanName {
@@ -64,7 +63,7 @@ export function resolvePlanByName(
   });
 }
 
-/** Build full plan data (`title, planName, handoff, tasks, base_commit`) from disk. */
+/** Build full plan data (`title, planName, tasks, base_commit`) from disk. */
 export function loadPlanData(
   planDir: string,
 ): Effect.Effect<
@@ -75,11 +74,9 @@ export function loadPlanData(
   return Effect.gen(function* () {
     const snapshot = yield* readTasksJsonl(planDir);
     if (!snapshot) return undefined;
-    const handoff = yield* loadHandoff(planDir);
     return {
       title: snapshot.meta.title,
       planName: snapshot.meta.plan_name,
-      handoff: handoff ?? "",
       tasks: snapshot.tasks,
       base_commit: snapshot.meta.base_commit,
     };

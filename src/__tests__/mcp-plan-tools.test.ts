@@ -15,7 +15,6 @@ describe("MCP plan tools", () => {
         arguments: {
           name: "beta",
           title: "Beta",
-          handoff: "# Beta",
           tasks: [{ description: "write beta" }],
         },
       }),
@@ -35,13 +34,13 @@ describe("MCP plan tools", () => {
     const status = content(
       await fixture.client.callTool({
         name: "taskman_status",
-        arguments: { plan: "beta", include_handoff: true },
+        arguments: { plan: "beta" },
       }),
     );
     expect(status).toMatchObject({
       resolved: true,
       ledger: { source: "default" },
-      plan: { name: "beta", handoff: "# Beta", tasks: [{ id: "t-001" }] },
+      plan: { name: "beta", tasks: [{ id: "t-001" }] },
     });
     const list = content(
       await fixture.client.callTool({

@@ -24,7 +24,6 @@ describe("application plan write commands", () => {
     const result = await createPlan(context, {
       name: "New Plan",
       title: "New Plan",
-      handoff: "# Handoff",
       initiative: "Parent Initiative",
       dependsOnPlans: ["first plan"],
       tasks: [{ id: "t-005", description: "a".repeat(61) }, { description: "second" }],
@@ -46,7 +45,6 @@ describe("application plan write commands", () => {
     await createPlan(context, {
       name: "p",
       title: "Original",
-      handoff: "# Original",
       initiative: "parent",
       dependsOnPlans: ["blocked"],
       tasks: [{ id: "t-001", description: "original" }],

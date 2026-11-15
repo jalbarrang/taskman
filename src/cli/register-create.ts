@@ -6,18 +6,15 @@ import type { Command } from "commander";
 import { INITIATIVE_STATES, PLAN_STATES } from "../lifecycle/transitions.js";
 import { closePlanCommand, closeInitiativeCommand } from "./commands/close.js";
 import { createPlanCommand } from "./commands/create-plan.js";
-import { createHandoffCommand } from "./commands/create-handoff.js";
 import { createInitiativeCommand } from "./commands/create-initiative.js";
 import { revisePlanCommand } from "./commands/revise-plan.js";
 
 export function registerCreateCommands(program: Command): void {
   program
     .command("create-plan")
-    .description("Create a plan (tasks.jsonl + HANDOFF.md + registry entry) from any harness")
-    .requiredOption("--name <name>", "short kebab-case plan name")
+    .description("Create a plan (tasks.jsonl + registry entry) from any harness")
+    .option("--name <name>", "short kebab-case plan name (defaults to a kebab of --title)")
     .requiredOption("--title <title>", "human-readable plan title")
-    .option("--handoff <text>", "HANDOFF.md markdown (inline)")
-    .option("--handoff-file <path>", 'read HANDOFF.md markdown from a file ("-" for stdin)')
     .option("--tasks <json>", "tasks as an inline JSON array of { description, ... }")
     .option("--tasks-file <path>", 'read the tasks JSON array from a file ("-" for stdin)')
     .option("--initiative <name>", "parent initiative name to link this plan to")
@@ -40,23 +37,12 @@ export function registerCreateCommands(program: Command): void {
     .description("Rewrite an existing plan in place; omitted fields preserved")
     .requiredOption("--plan <name>", "plan name (any directory prefix is stripped) to revise")
     .option("--title <title>", "new human-readable plan title")
-    .option("--handoff <text>", "new HANDOFF.md markdown (inline)")
-    .option("--handoff-file <path>", 'read new HANDOFF.md from a file ("-" for stdin)')
     .option("--tasks <json>", "replacement tasks JSON array of { id, description, ... }")
     .option("--tasks-file <path>", 'read replacement tasks JSON from a file ("-" for stdin)')
     .option("--initiative <name>", "re-link parent initiative (omit to preserve)")
     .option("--depends-on <names>", "comma-separated plan deps (omit to preserve)")
     .option("--json", "machine-readable JSON output")
     .action((opts) => revisePlanCommand(opts));
-
-  program
-    .command("create-handoff")
-    .description("Write/replace HANDOFF.md for a plan from any harness")
-    .argument("[content]", "HANDOFF.md markdown (inline); else use --file or stdin")
-    .option("--plan <name>", "plan to target")
-    .option("--file <path>", 'read markdown from a file ("-" for stdin)')
-    .option("--json", "machine-readable JSON output")
-    .action((content, opts) => createHandoffCommand(content, opts));
 
   program
     .command("close")

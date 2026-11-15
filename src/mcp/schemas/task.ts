@@ -16,7 +16,7 @@ export const updateTaskOutput = z.object({
 export const addTaskInput = z.object({
   plan: bareName.optional(),
   description,
-  reason: z.string().min(1),
+  reason: z.string().optional(),
   details: z.string().optional(),
   depends_on: z.array(taskId).optional(),
 });

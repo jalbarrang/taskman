@@ -4,14 +4,14 @@ import { CliError } from "./runtime.js";
 
 type ParsedTask = Record<string, unknown>;
 
-function taskArray(raw: string, message: string): ParsedTask[] {
+function taskArray(raw: string, message: string, allowEmpty = false): ParsedTask[] {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
     throw new CliError(message);
   }
-  if (!Array.isArray(parsed) || parsed.length === 0)
+  if (!Array.isArray(parsed) || (!allowEmpty && parsed.length === 0))
     throw new CliError("--tasks must be a non-empty JSON array.");
   return parsed.map((entry, index) => {
     if (typeof entry !== "object" || entry === null)
@@ -28,7 +28,7 @@ function description(task: ParsedTask, index: number): string {
 }
 
 export function parseCreateTasks(raw: string): CreateTaskInput[] {
-  return taskArray(raw, "--tasks must be a JSON array of { description, ... } objects.").map(
+  return taskArray(raw, "--tasks must be a JSON array of { description, ... } objects.", true).map(
     (task, index) => ({
       id: task.id as string | undefined,
       description: description(task, index),

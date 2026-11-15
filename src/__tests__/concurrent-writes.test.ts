@@ -1,7 +1,7 @@
 /**
  * Regression: concurrent read-modify-write on the registries must not lose
  * updates. Each `Effect.runPromise` mimics a separate tool execute running in
- * the same block (e.g. three `submit_initiative` calls). Before the file-lock
+ * the same block (e.g. three `create-initiative` calls). Before the file-lock
  * fix, their reads all saw the same starting file and the last write clobbered
  * the rest — only one entry survived.
  */

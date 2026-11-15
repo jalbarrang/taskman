@@ -65,14 +65,11 @@ export async function addDeferredTask(
   context: AppContext,
   input: AddTaskInput,
 ): Promise<AddTaskResult> {
-  const reason = input.reason;
-  if (!reason)
-    throw new AppError("INVALID_INPUT", "--reason is required (why the follow-up matters).");
   const { planName, planDir } = await requirePlan(context, input.plan);
   const task = await context.run(
     appendDeferredTask(planDir, {
       description: input.description,
-      reason,
+      reason: input.reason,
       details: input.details,
       depends_on: input.depends_on,
     }),

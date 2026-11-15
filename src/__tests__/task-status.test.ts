@@ -54,6 +54,10 @@ describe("isPlanFinalizable", () => {
   test("false when active work remains", () => {
     expect(isPlanFinalizable([make("pending")])).toBe(false);
   });
+
+  test("false for an empty project", () => {
+    expect(isPlanFinalizable([])).toBe(false);
+  });
 });
 
 describe("reactivateForExecution", () => {

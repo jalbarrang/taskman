@@ -7,7 +7,6 @@ import { AppError } from "../app/errors.js";
 import { requirePlan, resolvePlan } from "../app/resolve-plan.js";
 import { getPlanStatus } from "../app/status.js";
 import { upsertPlanEntry } from "../storage/plans-manifest.js";
-import { saveHandoff } from "../storage/plan-storage.js";
 import { writeTasksJsonl } from "../storage/task-storage.js";
 
 let dir = "";
@@ -42,13 +41,11 @@ describe("application status and root binding", () => {
     });
     await context.run(upsertPlanEntry("only", { status: "in-progress", title: "Only" }));
     await context.run(writeTasksJsonl("only", meta("Only"), [task]));
-    await context.run(saveHandoff("only", "# Handoff"));
-    const status = await getPlanStatus(context, { includeHandoff: true });
+    const status = await getPlanStatus(context);
     expect(status).toMatchObject({
       planName: "Only",
       counts: { pending: 1 },
       finalizable: false,
-      handoff: "# Handoff",
     });
   });
 

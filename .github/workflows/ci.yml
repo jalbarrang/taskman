@@ -29,6 +29,8 @@ jobs:
 
       - run: bun run lint
 
+      - run: bun run intent:validate
+
       - run: bun test
 
       - run: bun run build

@@ -31,7 +31,8 @@
   "files": [
     "dist",
     "README.md",
-    "skills"
+    "skills",
+    "!skills/_artifacts"
   ],
   "scripts": {
     "build": "tsdown",

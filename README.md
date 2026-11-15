@@ -22,7 +22,7 @@ working directory by default:
 - `<root>/plans.jsonl` — the plan registry.
 - `<root>/initiatives.jsonl` — the initiative registry (initiatives group plans).
 - `<root>/<plan>/tasks.jsonl` — one plan's task list (first line is metadata).
-- `<root>/<plan>/HANDOFF.md`, `<root>/<initiative>/INITIATIVE.md` — prose docs.
+- `<root>/<initiative>/INITIATIVE.md` — the initiative overview.
 
 ### Configuring the plans root (`.taskmanrc`)
 
@@ -64,20 +64,23 @@ taskman <command> --help  # flags + arguments for one command
 duplicate it (so it cannot drift). Every command prints human text by default
 and accepts `--json` for machine consumption.
 
-Create a plan from any harness (handoff/tasks accept an inline value, a `--*-file <path>`, or piped stdin):
+Create a plan from any harness (tasks accept an inline value or a `--tasks-file <path>`, where `-` reads stdin):
 
 ```bash
-echo "$MARKDOWN" | taskman create-plan --name my-plan --title "My Plan" \
-  --handoff-file - --tasks '[{"description":"do it"}]'
-taskman create-handoff --plan my-plan --file HANDOFF.md   # write/replace prose
+taskman create-plan --name my-plan --title "My Plan" \
+  --tasks '[{"description":"do it"}]'
+taskman revise-plan --plan my-plan --tasks-file TASKS.json   # rewrite the task list
 ```
+
+`--name` is optional (it defaults to a kebab-case of `--title`), and omitting
+`--tasks` creates an empty project you can fill with `add-task`.
 
 Create an initiative, then link member plans; revise a plan in place when follow-up changes arrive (omitted fields stay as-is; matching task ids keep status/notes):
 
 ```bash
 taskman create-initiative --name auth-overhaul --title "Auth Overhaul" --overview-file INITIATIVE.md
 taskman create-plan --name auth-api --title "Auth API" --initiative auth-overhaul \
-  --handoff "..." --tasks '[{"description":"scaffold"}]'
+  --tasks '[{"description":"scaffold"}]'
 taskman revise-plan --plan auth-api --title "Auth API v2" --tasks '[{"id":"t-001","description":"scaffold"},{"id":"t-002","description":"tests"}]'
 ```
 
@@ -112,7 +115,7 @@ The server exposes these eight tools:
 
 - `taskman_status` resolves and inspects a plan, including tasks and finalizability.
 - `taskman_list` lists plans or initiatives with filters and sorting.
-- `taskman_create_plan` creates or replaces a plan with its handoff and tasks.
+- `taskman_create_plan` creates or replaces a plan with its tasks.
 - `taskman_revise_plan` updates a plan while preserving matching task state.
 - `taskman_update_task` changes one task's status and optional notes.
 - `taskman_add_task` records a deferred follow-up task.

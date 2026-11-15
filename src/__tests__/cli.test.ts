@@ -12,8 +12,6 @@ import { updateTaskCommand } from "../cli/commands/update-task.js";
 import { addTaskCommand } from "../cli/commands/add-task.js";
 import { listPlansCommand } from "../cli/commands/list.js";
 import { createPlanCommand } from "../cli/commands/create-plan.js";
-import { createHandoffCommand } from "../cli/commands/create-handoff.js";
-import { readFile } from "node:fs/promises";
 import { CliError } from "../cli/runtime.js";
 
 const run = makePlanRuntime();
@@ -92,8 +90,9 @@ describe("update-task → status", () => {
 });
 
 describe("add-task", () => {
-  test("requires a reason", async () => {
-    await expect(addTaskCommand("follow up", {})).rejects.toBeInstanceOf(CliError);
+  test("reason is optional", async () => {
+    const out = await capture(() => addTaskCommand("follow up", { json: true }));
+    expect(JSON.parse(out).status).toBe("deferred");
   });
 
   test("appends a deferred task", async () => {
@@ -112,12 +111,11 @@ describe("list", () => {
 });
 
 describe("create-plan", () => {
-  test("writes tasks.jsonl, HANDOFF.md, and a registry entry", async () => {
+  test("writes tasks.jsonl and a registry entry", async () => {
     const out = await capture(() =>
       createPlanCommand({
         name: "New Plan",
         title: "New Plan",
-        handoff: "# Handoff\nDo the thing.",
         tasks: JSON.stringify([{ description: "first" }, { description: "second" }]),
         json: true,
       }),
@@ -125,9 +123,6 @@ describe("create-plan", () => {
     const parsed = JSON.parse(out);
     expect(parsed.plan_name).toBe("new-plan");
     expect(parsed.task_ids).toEqual(["t-001", "t-002"]);
-
-    const handoff = await readFile(".taskman/plans/new-plan/HANDOFF.md", "utf8");
-    expect(handoff).toContain("Do the thing.");
 
     const list = JSON.parse(await capture(() => listPlansCommand({ json: true })));
     expect(list.map((p: { name: string }) => p.name)).toContain("new-plan");
@@ -138,7 +133,6 @@ describe("create-plan", () => {
       createPlanCommand({
         name: "mixed",
         title: "Mixed",
-        handoff: "x",
         tasks: JSON.stringify([{ id: "t-005", description: "a" }, { description: "b" }]),
         json: true,
       }),
@@ -146,36 +140,25 @@ describe("create-plan", () => {
     expect(JSON.parse(out).task_ids).toEqual(["t-005", "t-006"]);
   });
 
-  test("rejects an empty task array", async () => {
-    await expect(
-      createPlanCommand({ name: "x", title: "X", handoff: "h", tasks: "[]" }),
-    ).rejects.toBeInstanceOf(CliError);
+  test("creates an empty project when tasks are omitted", async () => {
+    const out = await capture(() => createPlanCommand({ title: "Empty Project", json: true }));
+    expect(JSON.parse(out)).toMatchObject({ plan_name: "empty-project", task_count: 0 });
+  });
+
+  test("derives the plan name from the title", async () => {
+    const out = await capture(() => createPlanCommand({ title: "Derived Name", json: true }));
+    expect(JSON.parse(out).plan_name).toBe("derived-name");
   });
 
   test("rejects malformed tasks JSON", async () => {
     await expect(
-      createPlanCommand({ name: "x", title: "X", handoff: "h", tasks: "not json" }),
+      createPlanCommand({ name: "x", title: "X", tasks: "not json" }),
     ).rejects.toBeInstanceOf(CliError);
   });
 
-  test("requires name and title", async () => {
-    await expect(
-      createPlanCommand({ title: "X", handoff: "h", tasks: '[{"description":"a"}]' }),
-    ).rejects.toBeInstanceOf(CliError);
-  });
-});
-
-describe("create-handoff", () => {
-  test("writes HANDOFF.md for an existing plan from inline content", async () => {
-    const out = await capture(() =>
-      createHandoffCommand("# Hi\nfresh handoff", { plan: "p", json: true }),
+  test("requires a title", async () => {
+    await expect(createPlanCommand({ tasks: '[{"description":"a"}]' })).rejects.toBeInstanceOf(
+      CliError,
     );
-    expect(JSON.parse(out).plan_name).toBe("p");
-    const handoff = await readFile(".taskman/plans/p/HANDOFF.md", "utf8");
-    expect(handoff).toContain("fresh handoff");
-  });
-
-  test("errors clearly when the plan is missing", async () => {
-    await expect(createHandoffCommand("x", { plan: "ghost" })).rejects.toBeInstanceOf(CliError);
   });
 });

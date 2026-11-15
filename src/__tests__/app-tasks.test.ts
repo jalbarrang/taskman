@@ -56,13 +56,17 @@ describe("application task commands", () => {
     expect((await app.run(readPlansManifest()))[0]?.status).toBe("in-progress");
   });
 
-  test("rejects invalid task input with an application error", async () => {
+  test("rejects an invalid task status with an application error", async () => {
     const app = await context();
     await expect(updateTask(app, { taskId: "t-001", status: "bogus" })).rejects.toMatchObject({
       code: "INVALID_INPUT",
     } satisfies Partial<AppError>);
-    await expect(addDeferredTask(app, { description: "follow up" })).rejects.toBeInstanceOf(
-      AppError,
-    );
+  });
+
+  test("adds a follow-up without a reason", async () => {
+    const app = await context();
+    expect(await addDeferredTask(app, { description: "follow up" })).toMatchObject({
+      status: "deferred",
+    });
   });
 });

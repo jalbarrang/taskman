@@ -25,10 +25,7 @@ export function registerStatus(server: McpServer, context: McpContext): void {
         const ledger = { root: context.app.root, source: context.app.source };
         if (!resolution.planName)
           return { resolved: false, ledger, candidates: resolution.candidates };
-        const view = await getPlanStatus(context.app, {
-          plan: input.plan,
-          includeHandoff: input.include_handoff,
-        });
+        const view = await getPlanStatus(context.app, { plan: input.plan });
         return {
           resolved: true,
           ledger,
@@ -37,7 +34,6 @@ export function registerStatus(server: McpServer, context: McpContext): void {
             name: view.planName,
             title: view.title,
             base_commit: view.baseCommit,
-            handoff: view.handoff,
             tasks: view.tasks,
             counts: view.counts,
             finalizable: view.finalizable,

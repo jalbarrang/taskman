@@ -24,7 +24,6 @@ export function registerRevisePlan(server: McpServer, context: McpContext): void
           const result = await revisePlan(context.app, {
             plan: input.plan,
             title: input.title,
-            handoff: input.handoff,
             tasks: input.tasks,
             initiative: input.initiative,
             dependsOnPlans: input.depends_on_plans,

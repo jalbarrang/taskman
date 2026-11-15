@@ -3,7 +3,6 @@ import { bareName, planStatus, taskRecord } from "./common.js";
 
 export const statusInput = z.object({
   plan: bareName.optional(),
-  include_handoff: z.boolean().optional(),
 });
 export const statusOutput = z.object({
   resolved: z.boolean(),
@@ -14,7 +13,6 @@ export const statusOutput = z.object({
       name: z.string(),
       title: z.string(),
       base_commit: z.string().optional(),
-      handoff: z.string().optional(),
       tasks: z.array(taskRecord),
       counts: z.object({
         done: z.number(),

@@ -30,7 +30,7 @@ export class FileSystem extends Context.Tag("PlanMode/FileSystem")<
  * Build a node-backed filesystem service whose relative paths resolve against
  * `root` — the ledger folder itself. All storage programs use ledger-relative
  * paths (`plans.jsonl`, `<plan>/tasks.jsonl`), so the root places the entire
- * plan registry coherently (manifests, plan dirs, handoffs).
+ * plan registry coherently (manifests and plan dirs).
  *
  * `resolve(root, p)` is a no-op for already-absolute paths; a relative `root`
  * resolves against `process.cwd()` at call time.

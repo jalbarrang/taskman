@@ -13,12 +13,11 @@ export interface PlanStatusView {
   counts: Record<TaskStatus, number>;
   finalizable: boolean;
   baseCommit?: string;
-  handoff?: string;
 }
 
 export async function getPlanStatus(
   context: AppContext,
-  input: { plan?: string; includeHandoff?: boolean },
+  input: { plan?: string } = {},
 ): Promise<PlanStatusView> {
   const { planName, planDir } = await requirePlan(context, input.plan);
   const plan = await context.run(loadPlanData(planDir));
@@ -43,6 +42,5 @@ export async function getPlanStatus(
     counts,
     finalizable: isPlanFinalizable(plan.tasks),
     baseCommit: plan.base_commit,
-    ...(input.includeHandoff ? { handoff: plan.handoff } : {}),
   };
 }
