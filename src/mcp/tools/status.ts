@@ -1,6 +1,6 @@
 import { getPlanStatus } from "../../app/status.js";
 import { resolvePlan } from "../../app/resolve-plan.js";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import type { McpContext } from "../context.js";
 import { respond } from "../result.js";
 import { statusInput, statusOutput } from "../schemas/query.js";

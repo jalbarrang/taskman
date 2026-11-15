@@ -1,11 +1,12 @@
 import { afterEach, expect, test } from "bun:test";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { Client } from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createPlan } from "../app/create-plan.js";
 import { makeAppContext } from "../app/context.js";
+import { packageVersion } from "../version.js";
 
 let client: Client | undefined;
 let dir = "";
@@ -38,8 +39,15 @@ test("serves the bound ledger over clean Node stdio", async () => {
     cwd: dir,
     stderr: "pipe",
   });
-  client = new Client({ name: "taskman-stdio-test", version: "1.0.0" });
+  client = new Client(
+    { name: "taskman-stdio-test", version: "1.0.0" },
+    // Probe with server/discover so this exercises the 2026-07-28 era rather
+    // than the legacy initialize handshake.
+    { versionNegotiation: { mode: "auto" } },
+  );
   await client.connect(transport);
+  expect(client.getProtocolEra()).toBe("modern");
+  expect(client.getServerVersion()).toMatchObject({ name: "taskman", version: packageVersion() });
   const tools = await client.listTools();
   expect(tools.tools.map((tool) => tool.name).sort()).toEqual([
     "taskman_add_task",

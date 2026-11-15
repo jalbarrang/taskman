@@ -1,5 +1,5 @@
 import { revisePlan } from "../../app/revise-plan.js";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import type { McpContext } from "../context.js";
 import { respond } from "../result.js";
 import { revisePlanInput, revisePlanOutput } from "../schemas/plan.js";

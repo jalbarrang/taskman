@@ -106,7 +106,9 @@ Configure any MCP-capable harness to start it from the repository whose ledger i
 
 The server binds its ledger root once at startup from that `cwd`, using the repository's `.taskmanrc` when present or the default `.taskman/plans/` otherwise. Tools do not accept root or filesystem-path inputs. Every call reads the ledger fresh from disk, so changes made before a call are visible.
 
-Version 1 exposes these eight tools:
+It speaks MCP revision `2026-07-28` (stateless per-request envelopes and `server/discover`) while still serving 2025-era clients on the same stdio connection, and reports the package version as its `serverInfo`.
+
+The server exposes these eight tools:
 
 - `taskman_status` resolves and inspects a plan, including tasks and finalizability.
 - `taskman_list` lists plans or initiatives with filters and sorting.
@@ -117,7 +119,7 @@ Version 1 exposes these eight tools:
 - `taskman_close` sets a plan lifecycle status.
 - `taskman_reconcile` reports or safely applies status-projection repairs.
 
-There are no MCP resources or prompts in v1. MCP is available through `taskman mcp`, not as a public MCP library export.
+There are no MCP resources or prompts. MCP is available through `taskman mcp`, not as a public MCP library export.
 
 Mutating tool calls are serialized within one running MCP server process. That queue does not coordinate with another Taskman CLI or MCP server process, so concurrent cross-process writes can still race; v1 makes no cross-process atomicity guarantee.
 

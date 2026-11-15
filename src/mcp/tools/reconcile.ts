@@ -1,5 +1,5 @@
 import { reconcileLedger } from "../../app/reconcile.js";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import type { McpContext } from "../context.js";
 import { respond } from "../result.js";
 import { reconcileInput, reconcileOutput } from "../schemas/lifecycle.js";
