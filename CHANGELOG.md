@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.9.0](https://github.com/jalbarrang/taskman/compare/v0.8.0...v0.9.0) (2026-11-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cli:** simplify plan creation and remove the handoff
+
+### Features
+
+* **mcp:** serve MCP protocol 2026-07-28 over stdio ([f3d7fb8](https://github.com/jalbarrang/taskman/commit/f3d7fb85baef74b6467a844c141fe25abb411419))
+
+
+### Bug Fixes
+
+* **engine:** serialize task writes and enforce transitions ([cca3bb2](https://github.com/jalbarrang/taskman/commit/cca3bb2bffca16ad871808d230eb07fd281a5ffb))
+
+
+### Code Refactoring
+
+* **cli:** simplify plan creation and remove the handoff ([2a256e1](https://github.com/jalbarrang/taskman/commit/2a256e11000a81c2a09d4bda15a3ce8991e9933f))
+
 ## [0.8.0](https://github.com/jalbarrang/taskman/compare/v0.7.1...v0.8.0) (2026-07-15)
 
 
