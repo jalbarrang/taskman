@@ -1,12 +1,11 @@
 import { Effect } from "effect";
 import { reconcileInitiativeForPlan } from "../initiative.js";
-import { upsertPlanEntry } from "../storage/plans-manifest.js";
+import { PLAN_STATES } from "../lifecycle/transitions.js";
+import { transitionPlanStatus } from "../storage/plans-manifest.js";
 import type { PlanStatus } from "../types.js";
 import type { AppContext } from "./context.js";
 import { AppError } from "./errors.js";
 import { requirePlan } from "./resolve-plan.js";
-
-const PLAN_STATUSES: PlanStatus[] = ["done", "superseded", "abandoned", "in-progress"];
 
 export interface ClosePlanInput {
   plan?: string;
@@ -21,13 +20,13 @@ export interface ClosePlanResult {
 }
 
 function planStatus(status: string): PlanStatus {
-  if (PLAN_STATUSES.includes(status as PlanStatus)) return status as PlanStatus;
+  if ((PLAN_STATES as readonly string[]).includes(status)) return status as PlanStatus;
   throw new AppError(
     "INVALID_INPUT",
-    `Invalid status "${status}". Use one of: ${PLAN_STATUSES.join(", ")}.`,
+    `Invalid status "${status}". Use one of: ${PLAN_STATES.join(", ")}.`,
     {
       status,
-      valid: PLAN_STATUSES,
+      valid: PLAN_STATES,
     },
   );
 }
@@ -38,10 +37,20 @@ export async function closePlan(
 ): Promise<ClosePlanResult> {
   const status = planStatus(input.status);
   const { planName } = await requirePlan(context, input.plan);
-  await context.run(
-    upsertPlanEntry(planName, { status, reason: input.reason }).pipe(
-      Effect.andThen(reconcileInitiativeForPlan(planName)),
+  const outcome = await context.run(
+    transitionPlanStatus(planName, status, "manual", { reason: input.reason }).pipe(
+      Effect.tap(() => reconcileInitiativeForPlan(planName)),
     ),
   );
+  if (outcome.kind === "missing") {
+    throw new AppError("PLAN_NOT_FOUND", `Plan "${planName}" is not registered.`);
+  }
+  if (outcome.kind === "rejected") {
+    throw new AppError(
+      "INVALID_INPUT",
+      `Cannot move ${planName} from ${outcome.from} to ${status}. Allowed: ${outcome.allowed.join(", ") || "none"}.`,
+      { from: outcome.from, to: status, allowed: outcome.allowed },
+    );
+  }
   return { planName, status, reason: input.reason };
 }

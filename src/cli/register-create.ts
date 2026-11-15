@@ -3,6 +3,7 @@
  */
 
 import type { Command } from "commander";
+import { INITIATIVE_STATES, PLAN_STATES } from "../lifecycle/transitions.js";
 import { closePlanCommand, closeInitiativeCommand } from "./commands/close.js";
 import { createPlanCommand } from "./commands/create-plan.js";
 import { createHandoffCommand } from "./commands/create-handoff.js";
@@ -60,7 +61,7 @@ export function registerCreateCommands(program: Command): void {
   program
     .command("close")
     .description("Set a plan lifecycle status")
-    .argument("<status>", "done|superseded|abandoned|in-progress")
+    .argument("<status>", PLAN_STATES.join("|"))
     .option("--plan <name>", "plan to target")
     .option("--reason <text>", "why (recorded in the registry)")
     .option("--json", "machine-readable JSON output")
@@ -69,7 +70,7 @@ export function registerCreateCommands(program: Command): void {
   program
     .command("close-initiative")
     .description("Set an initiative lifecycle status")
-    .argument("<status>", "done|superseded|abandoned|in-progress")
+    .argument("<status>", INITIATIVE_STATES.join("|"))
     .argument("<name>", "initiative name")
     .option("--reason <text>", "why (recorded in the registry)")
     .option("--json", "machine-readable JSON output")

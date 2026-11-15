@@ -23,6 +23,7 @@ import type {
 } from "./errors.js";
 import { readPlansManifest, reconcilePlanStatus } from "./storage/plans-manifest.js";
 import { readInitiativesManifest } from "./storage/initiatives-manifest.js";
+import { canTransition, planMachine } from "./lifecycle/transitions.js";
 import {
   isInitiativeFinalizable,
   membersOf,
@@ -209,10 +210,11 @@ export function applyInitiativeReconcile(
  * Repair `status`-class drift by projecting derived status into the registry.
  *
  * Safety: only `upgrade` drift (registry `in-progress` → tasks `done`) is
- * auto-repaired. A `downgrade` (registry `done` → tasks `in-progress`) is
- * reported but NEVER auto-applied — it almost always means work merged without
- * marking tasks done, and projecting tasks→registry there would regress a
- * finished plan. The human resolves it by marking the tasks done instead.
+ * auto-repaired. The machine's `repair` actor has no other edges, so a
+ * `downgrade` (registry `done` → tasks `in-progress`) is reported but NEVER
+ * auto-applied — it almost always means work merged without marking tasks done,
+ * and projecting tasks→registry there would regress a finished plan. The human
+ * resolves it by marking the tasks done instead.
  *
  * Orphans and registry-only rows are likewise reported but not auto-fixed.
  * Returns the rows that were repaired.
@@ -223,10 +225,10 @@ export function applyReconcile(
   return Effect.gen(function* () {
     const repaired: PlanDriftRow[] = [];
     for (const row of rows) {
-      if (row.drift !== "status" || !row.derivedStatus) continue;
-      // Guard against the wrong-direction projection: never auto-regress a
-      // `done` plan back to `in-progress`.
-      if (row.direction === "downgrade") continue;
+      if (row.drift !== "status" || !row.derivedStatus || !row.registryStatus) continue;
+      // The `repair` actor only permits in-progress → done; downgrades are
+      // surfaced to the caller, never written.
+      if (!canTransition(planMachine, row.registryStatus, row.derivedStatus, "repair")) continue;
       yield* reconcilePlanStatus(row.name, row.derivedStatus === "done", row.title);
       // Repairing a plan's status can flip its parent initiative's projection.
       yield* reconcileInitiativeForPlan(row.name);

@@ -6,18 +6,15 @@
  */
 
 import { closePlan } from "../../app/lifecycle.js";
-import { upsertInitiativeEntry } from "../../storage/initiatives-manifest.js";
-import type { PlanStatus } from "../../types.js";
+import { INITIATIVE_STATES } from "../../lifecycle/transitions.js";
+import { transitionInitiativeStatus } from "../../storage/initiatives-manifest.js";
+import type { InitiativeStatus } from "../../types.js";
 import { getAppContext, runPlanIO, CliError } from "../runtime.js";
 import { emit } from "../format.js";
 
-const VALID: PlanStatus[] = ["done", "superseded", "abandoned", "in-progress"];
-
-function assertStatus(status: string): PlanStatus {
-  if (!VALID.includes(status as PlanStatus)) {
-    throw new CliError(`Invalid status "${status}". Use one of: ${VALID.join(", ")}.`);
-  }
-  return status as PlanStatus;
+function parseInitiativeStatus(status: string): InitiativeStatus {
+  if ((INITIATIVE_STATES as readonly string[]).includes(status)) return status as InitiativeStatus;
+  throw new CliError(`Invalid status "${status}". Use one of: ${INITIATIVE_STATES.join(", ")}.`);
 }
 
 export async function closePlanCommand(
@@ -37,9 +34,19 @@ export async function closeInitiativeCommand(
   name: string,
   opts: { reason?: string; json?: boolean },
 ): Promise<void> {
-  const s = assertStatus(status);
+  const s = parseInitiativeStatus(status);
   if (!name) throw new CliError("Initiative name is required.");
-  await runPlanIO(upsertInitiativeEntry(name, { status: s, reason: opts.reason }));
+  const outcome = await runPlanIO(
+    transitionInitiativeStatus(name, s, "manual", { reason: opts.reason }),
+  );
+  if (outcome.kind === "missing") {
+    throw new CliError(`Initiative "${name}" is not registered.`);
+  }
+  if (outcome.kind === "rejected") {
+    throw new CliError(
+      `Cannot move ${name} from ${outcome.from} to ${s}. Allowed: ${outcome.allowed.join(", ") || "none"}.`,
+    );
+  }
   emit(
     Boolean(opts.json),
     { initiative: name, status: s, reason: opts.reason ?? null },

@@ -11,6 +11,9 @@ export function classifyError(error: unknown): ToolError {
     message?: string;
     path?: string;
     taskId?: string;
+    from?: string;
+    to?: string;
+    allowed?: readonly string[];
   };
   const tag = tagged?._tag ?? tagged?.name ?? "";
   if (tag.includes("TaskNotFound"))
@@ -18,6 +21,17 @@ export function classifyError(error: unknown): ToolError {
       code: "TASK_NOT_FOUND",
       message: tagged.message ?? "Task not found.",
       data: { task_id: tagged.taskId ?? "" },
+    };
+  if (tag.includes("InvalidTaskTransition"))
+    return {
+      code: "INVALID_INPUT",
+      message: tagged.message ?? "Illegal task transition.",
+      data: {
+        task_id: tagged.taskId ?? "",
+        from: tagged.from,
+        to: tagged.to,
+        allowed: tagged.allowed,
+      },
     };
   if (
     ["JsonlParseError", "JsonlValidationError", "MissingMetaRecord"].some((name) =>

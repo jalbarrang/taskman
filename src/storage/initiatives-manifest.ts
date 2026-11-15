@@ -16,6 +16,14 @@
 import { Effect, Either, Option } from "effect";
 import { FileSystem } from "../effects/filesystem.js";
 import { JsonlParseError, JsonlValidationError, PlanWriteError } from "../errors.js";
+import {
+  canTransition,
+  initiativeMachine,
+  isTerminalStatus,
+  nextStates,
+  type InitiativeActor,
+  type TransitionOutcome,
+} from "../lifecycle/transitions.js";
 import { decodeInitiativeManifestEntry } from "../schema.js";
 import type { InitiativeStatus } from "../types.js";
 import { withFileLock } from "./file-lock.js";
@@ -34,10 +42,7 @@ export interface InitiativeManifestEntry {
   reason?: string;
 }
 
-/** A status is terminal (closed) when it is anything other than in-progress. */
-export function isTerminalStatus(status: InitiativeStatus): boolean {
-  return status !== "in-progress";
-}
+// Terminality is defined by the lifecycle machine.
 
 type ReadError = JsonlParseError | JsonlValidationError;
 
@@ -152,4 +157,42 @@ export function upsertInitiativeEntry(
       return true;
     }),
   );
+}
+
+/**
+ * Move a KNOWN initiative to `to` if the lifecycle machine allows `actor` to
+ * take that edge. Returns the outcome instead of writing blindly; a missing
+ * initiative or a rejected edge leaves the registry untouched.
+ */
+export function transitionInitiativeStatus(
+  name: string,
+  to: InitiativeStatus,
+  actor: InitiativeActor,
+  extra: { title?: string; reason?: string } = {},
+): Effect.Effect<TransitionOutcome<InitiativeStatus>, ReadError | PlanWriteError, FileSystem> {
+  return Effect.gen(function* () {
+    let outcome: TransitionOutcome<InitiativeStatus> = { kind: "missing" };
+    yield* mutateInitiativesManifest((entries) =>
+      Effect.sync(() => {
+        const existing = entries.find((entry) => entry.name === name);
+        if (!existing) return false;
+        if (!canTransition(initiativeMachine, existing.status, to, actor)) {
+          outcome = {
+            kind: "rejected",
+            from: existing.status,
+            allowed: nextStates(initiativeMachine, existing.status, actor),
+          };
+          return false;
+        }
+        if (existing.status === to) {
+          outcome = { kind: "unchanged" };
+          return false;
+        }
+        applyInitiativeUpsert(entries, name, { status: to, ...extra });
+        outcome = { kind: "changed" };
+        return true;
+      }),
+    );
+    return outcome;
+  });
 }

@@ -7,6 +7,7 @@
  */
 
 import { Data } from "effect";
+import type { TaskStatus } from "./types.js";
 
 export class PlanReadError extends Data.TaggedError("PlanReadError")<{
   readonly path: string;
@@ -68,6 +69,19 @@ export class TasksFileNotFound extends Data.TaggedError("TasksFileNotFound")<{
 }> {
   get message(): string {
     return `No tasks.jsonl found in ${this.planDir}`;
+  }
+}
+
+/** A task status change the lifecycle machine does not allow. */
+export class InvalidTaskTransition extends Data.TaggedError("InvalidTaskTransition")<{
+  readonly taskId: string;
+  readonly from: TaskStatus;
+  readonly to: TaskStatus;
+  readonly allowed: readonly TaskStatus[];
+}> {
+  get message(): string {
+    const allowed = this.allowed.length ? this.allowed.join(", ") : "none";
+    return `Cannot move ${this.taskId} from ${this.from} to ${this.to}. Allowed: ${allowed}.`;
   }
 }
 

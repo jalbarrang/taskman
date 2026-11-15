@@ -1,9 +1,19 @@
 import { Effect, Either, Option } from "effect";
 import { FileSystem } from "../effects/filesystem.js";
 import { JsonlParseError, JsonlValidationError, PlanWriteError } from "../errors.js";
+import {
+  canTransition,
+  isTerminalStatus,
+  nextStates,
+  planMachine,
+  type PlanActor,
+  type TransitionOutcome,
+} from "../lifecycle/transitions.js";
 import { decodePlanManifestEntry } from "../schema.js";
 import type { PlanStatus } from "../types.js";
 import { withFileLock } from "./file-lock.js";
+
+export { isTerminalStatus };
 
 // Paths are ledger-relative; the ledger folder itself is the FileSystem root
 // (see makePlanRuntime). '.' means "ensure the ledger root exists".
@@ -24,10 +34,8 @@ export interface PlanManifestEntry {
   depends_on?: string[];
 }
 
-/** A status is terminal (closed) when it is anything other than in-progress. */
-export function isTerminalStatus(status: PlanStatus): boolean {
-  return status !== "in-progress";
-}
+// Terminality is defined by the lifecycle machine; re-exported here so the
+// public `plans-manifest` surface keeps working.
 
 type ReadError = JsonlParseError | JsonlValidationError;
 
@@ -146,6 +154,42 @@ export function upsertPlanEntry(
 }
 
 /**
+ * Move a KNOWN plan to `to` if the lifecycle machine allows `actor` to take
+ * that edge. Returns the outcome instead of writing blindly; a missing plan or
+ * a rejected edge leaves the registry untouched.
+ */
+export function transitionPlanStatus(
+  name: string,
+  to: PlanStatus,
+  actor: PlanActor,
+  extra: { title?: string; reason?: string } = {},
+): Effect.Effect<TransitionOutcome<PlanStatus>, ReadError | PlanWriteError, FileSystem> {
+  return Effect.gen(function* () {
+    let outcome: TransitionOutcome<PlanStatus> = { kind: "missing" };
+    yield* mutatePlansManifest((entries) => {
+      const existing = entries.find((entry) => entry.name === name);
+      if (!existing) return false;
+      if (!canTransition(planMachine, existing.status, to, actor)) {
+        outcome = {
+          kind: "rejected",
+          from: existing.status,
+          allowed: nextStates(planMachine, existing.status, actor),
+        };
+        return false;
+      }
+      if (existing.status === to) {
+        outcome = { kind: "unchanged" };
+        return false;
+      }
+      applyPlanUpsert(entries, name, { status: to, ...extra });
+      outcome = { kind: "changed" };
+      return true;
+    });
+    return outcome;
+  });
+}
+
+/**
  * Reconcile a plan's registry status from its task state.
  *
  * The registry `status` is a PROJECTION of task state, not a parallel flag.
@@ -153,8 +197,9 @@ export function upsertPlanEntry(
  * formal in-session execution run (see FEEDBACK #1). `finalizable` means every
  * active task is resolved AND no deferred follow-ups remain.
  *
- * Guard: a manually-set terminal status (`superseded` / `abandoned`) is never
- * auto-overridden — only `in-progress` ⇄ `done` is derived from tasks.
+ * Guard: the lifecycle machine gives `projection` only `in-progress` ⇄ `done`
+ * edges, so a manually-set terminal status (`superseded` / `abandoned`) is
+ * never auto-overridden.
  */
 export function reconcilePlanStatus(
   name: string,
@@ -166,9 +211,10 @@ export function reconcilePlanStatus(
     // Reconcile only reflects task state for KNOWN plans; never conjure an
     // entry for an unregistered plan (orphans are surfaced, not auto-created).
     if (!existing) return false;
-    // Do not resurrect / clobber an explicitly closed plan.
-    if (existing.status === "superseded" || existing.status === "abandoned") return false;
     const status: PlanStatus = finalizable ? "done" : "in-progress";
+    // The `projection` actor only has in-progress ⇄ done edges, so a manually
+    // closed terminal plan is never resurrected or clobbered.
+    if (!canTransition(planMachine, existing.status, status, "projection")) return false;
     if (existing.status === status) return false; // no change
     applyPlanUpsert(entries, name, { status, title });
     return true;

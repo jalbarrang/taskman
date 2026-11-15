@@ -3,6 +3,7 @@
  */
 
 import type { Command } from "commander";
+import { TASK_UPDATE_TARGETS } from "../lifecycle/transitions.js";
 import { updateTaskCommand } from "./commands/update-task.js";
 import { addTaskCommand } from "./commands/add-task.js";
 import { reconcileCommand } from "./commands/reconcile.js";
@@ -11,9 +12,9 @@ import { registerCreateCommands } from "./register-create.js";
 export function registerMutateCommands(program: Command): void {
   program
     .command("update-task")
-    .description("Set a task status (done|skipped|blocked|pending)")
+    .description(`Set a task status (${TASK_UPDATE_TARGETS.join("|")})`)
     .argument("<id>", "task id, e.g. t-001")
-    .argument("<status>", "done|skipped|blocked|pending")
+    .argument("<status>", TASK_UPDATE_TARGETS.join("|"))
     .option("--plan <name>", "plan to target")
     .option("--notes <text>", "notes recorded on the task")
     .option("--json", "machine-readable JSON output")

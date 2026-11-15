@@ -16,6 +16,7 @@
 import { Effect } from "effect";
 import { FileSystem } from "./effects/filesystem.js";
 import type { JsonlParseError, JsonlValidationError, PlanWriteError } from "./errors.js";
+import { canTransition, initiativeMachine } from "./lifecycle/transitions.js";
 import { readPlansManifest, type PlanManifestEntry } from "./storage/plans-manifest.js";
 import {
   applyInitiativeUpsert,
@@ -142,8 +143,8 @@ type ReconcileError = JsonlParseError | JsonlValidationError | PlanWriteError;
  * Re-derive an initiative's registry status from its member plans.
  *
  * Like `reconcilePlanStatus`: only reflects state for a KNOWN initiative (never
- * conjures an entry), and never clobbers a manually-set terminal status
- * (`superseded` / `abandoned`). Only `in-progress` ⇄ `done` is derived.
+ * conjures an entry), and the `projection` actor only has `in-progress` ⇄
+ * `done` edges, so a manually-set terminal status is never clobbered.
  */
 export function reconcileInitiativeStatus(
   name: string,
@@ -154,9 +155,9 @@ export function reconcileInitiativeStatus(
     Effect.gen(function* () {
       const existing = initiatives.find((entry) => entry.name === name);
       if (!existing) return false;
-      if (existing.status === "superseded" || existing.status === "abandoned") return false;
       const plans = yield* readPlansManifest();
       const status: PlanStatus = isInitiativeFinalizable(name, plans) ? "done" : "in-progress";
+      if (!canTransition(initiativeMachine, existing.status, status, "projection")) return false;
       if (existing.status === status) return false;
       applyInitiativeUpsert(initiatives, name, { status, title: existing.title });
       return true;

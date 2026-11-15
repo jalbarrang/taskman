@@ -22,6 +22,9 @@ export type {
 } from "./types.js";
 export * from "./errors.js";
 
+// Explicit lifecycle machines
+export * from "./lifecycle/transitions.js";
+
 // Schema
 export * from "./schema.js";
 
@@ -51,8 +54,8 @@ export {
   applyPlanUpsert,
   mutatePlansManifest,
   upsertPlanEntry,
+  transitionPlanStatus,
   reconcilePlanStatus,
-  isTerminalStatus,
   type PlanManifestEntry,
   type PlanUpsert,
 } from "./storage/plans-manifest.js";
@@ -62,6 +65,7 @@ export {
   applyInitiativeUpsert,
   mutateInitiativesManifest,
   upsertInitiativeEntry,
+  transitionInitiativeStatus,
   type InitiativeManifestEntry,
   type InitiativeUpsert,
 } from "./storage/initiatives-manifest.js";

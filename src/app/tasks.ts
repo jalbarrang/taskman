@@ -1,10 +1,9 @@
 import { appendDeferredTask, setTaskStatus } from "../engine.js";
+import { TASK_UPDATE_TARGETS } from "../lifecycle/transitions.js";
 import type { TaskStatus } from "../types.js";
 import type { AppContext } from "./context.js";
 import { AppError } from "./errors.js";
 import { requirePlan } from "./resolve-plan.js";
-
-const TASK_STATUSES: TaskStatus[] = ["done", "skipped", "blocked", "pending"];
 
 export interface UpdateTaskInput {
   plan?: string;
@@ -36,13 +35,13 @@ export interface AddTaskResult {
 }
 
 function taskStatus(status: string): TaskStatus {
-  if (TASK_STATUSES.includes(status as TaskStatus)) return status as TaskStatus;
+  if ((TASK_UPDATE_TARGETS as readonly string[]).includes(status)) return status as TaskStatus;
   throw new AppError(
     "INVALID_INPUT",
-    `Invalid status "${status}". Use one of: ${TASK_STATUSES.join(", ")}.`,
+    `Invalid status "${status}". Use one of: ${TASK_UPDATE_TARGETS.join(", ")}.`,
     {
       status,
-      valid: TASK_STATUSES,
+      valid: TASK_UPDATE_TARGETS,
     },
   );
 }
