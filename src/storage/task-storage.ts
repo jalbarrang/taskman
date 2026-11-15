@@ -15,6 +15,21 @@ import { withFileLock } from "./file-lock.js";
 
 const TASKS_FILE = "tasks.jsonl";
 
+/**
+ * Serialize a read-modify-write of one plan's `tasks.jsonl`.
+ *
+ * All writers must take this lock before reading the snapshot, so concurrent
+ * updates (parallel tool calls, several processes in one harness) cannot
+ * overwrite each other. Keys are ledger-relative, matching the path used by
+ * `updateTask`.
+ */
+export function withTasksLock<A, E, R>(
+  planDir: string,
+  effect: Effect.Effect<A, E, R>,
+): Effect.Effect<A, E, R> {
+  return withFileLock(join(planDir, TASKS_FILE), effect);
+}
+
 export interface TasksSnapshot {
   meta: TaskMeta;
   tasks: TaskRecord[];
@@ -89,8 +104,8 @@ export function updateTask(
 > {
   // Serialize the read-modify-write so concurrent task updates to the same plan
   // (e.g. parallel update_task / update_tasks calls) cannot clobber each other.
-  return withFileLock(
-    join(planDir, TASKS_FILE),
+  return withTasksLock(
+    planDir,
     Effect.gen(function* () {
       const snapshot = yield* readTasksJsonl(planDir);
       if (!snapshot) return yield* Effect.fail(new TasksFileNotFound({ planDir }));

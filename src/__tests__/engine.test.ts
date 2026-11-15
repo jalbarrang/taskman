@@ -42,6 +42,12 @@ afterEach(async () => {
 });
 
 describe("setTaskStatus", () => {
+  test("rejects a transition the machine does not allow", async () => {
+    await expect(run(setTaskStatus("p", "t-001", "deferred"))).rejects.toThrow(
+      "Cannot move t-001 from pending to deferred",
+    );
+  });
+
   test("updates status + notes and persists", async () => {
     const res = await run(setTaskStatus("p", "t-001", "done", "shipped"));
     expect(res.task.status).toBe("done");

@@ -16,6 +16,7 @@ import { FileSystem, nodeFileSystemService } from "../effects/filesystem.js";
 import { readPlansManifest, upsertPlanEntry } from "../storage/plans-manifest.js";
 import { readInitiativesManifest, upsertInitiativeEntry } from "../storage/initiatives-manifest.js";
 import { writeTasksJsonl, readTasksJsonl, updateTask } from "../storage/task-storage.js";
+import { appendDeferredTask, setTaskStatus } from "../engine.js";
 import type { TaskMeta, TaskRecord } from "../types.js";
 
 // Each call gets its OWN runPromise so the writes are genuinely concurrent —
@@ -76,5 +77,56 @@ describe("concurrent registry writes", () => {
 
     const snapshot = await run(readTasksJsonl(planDir));
     expect(snapshot?.tasks.every((t) => t.status === "done")).toBe(true);
+  });
+
+  // The application layer writes through the engine, not `updateTask`, so the
+  // regression guard must exercise that path too.
+  test("concurrent engine status updates persist and project correctly", async () => {
+    const planDir = "engine";
+    const taskIds = ["t-001", "t-002", "t-003"];
+    await run(
+      writeTasksJsonl(
+        planDir,
+        { _type: "meta", plan_name: planDir, title: "Engine", created_at: "now" },
+        taskIds.map((id) => ({
+          _type: "task" as const,
+          id,
+          description: id,
+          status: "pending" as const,
+          created_at: "now",
+          updated_at: "now",
+        })),
+      ),
+    );
+    await run(upsertPlanEntry(planDir, { status: "in-progress", title: "Engine" }));
+
+    await Promise.all(taskIds.map((id) => run(setTaskStatus(planDir, id, "done"))));
+
+    const snapshot = await run(readTasksJsonl(planDir));
+    expect(snapshot?.tasks.every((t) => t.status === "done")).toBe(true);
+    const plan = (await run(readPlansManifest())).find((entry) => entry.name === planDir);
+    expect(plan?.status).toBe("done");
+  });
+
+  test("concurrent deferred appends get distinct ids", async () => {
+    const planDir = "appends";
+    await run(
+      writeTasksJsonl(
+        planDir,
+        { _type: "meta", plan_name: planDir, title: "Appends", created_at: "now" },
+        [],
+      ),
+    );
+
+    await Promise.all(
+      ["a", "b", "c"].map((description) =>
+        run(appendDeferredTask(planDir, { description, reason: "found while working" })),
+      ),
+    );
+
+    const snapshot = await run(readTasksJsonl(planDir));
+    const ids = snapshot?.tasks.map((task) => task.id) ?? [];
+    expect(ids).toHaveLength(3);
+    expect(new Set(ids).size).toBe(3);
   });
 });

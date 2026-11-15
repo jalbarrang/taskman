@@ -13,8 +13,9 @@ import type {
   MissingMetaRecord,
   PlanWriteError,
 } from "./errors.js";
-import { TaskNotFound, TasksFileNotFound } from "./errors.js";
-import { readTasksJsonl, writeTasksJsonl } from "./storage/task-storage.js";
+import { TaskNotFound, InvalidTaskTransition, TasksFileNotFound } from "./errors.js";
+import { canTransition, nextStates, taskMachine } from "./lifecycle/transitions.js";
+import { readTasksJsonl, withTasksLock, writeTasksJsonl } from "./storage/task-storage.js";
 import { reconcilePlanStatus } from "./storage/plans-manifest.js";
 import { reconcileInitiativeForPlan } from "./initiative.js";
 import { isPlanFinalizable } from "./task-status.js";
@@ -44,28 +45,49 @@ export interface UpdatedTaskResult {
 /**
  * Set a task's status (and optional notes), persist, then re-project registry
  * status. Mirrors the extension's `onTaskUpdated`.
+ *
+ * The whole read-modify-write plus the reconcile run under the plan's tasks
+ * lock so concurrent updates keep the projection consistent.
  */
 export function setTaskStatus(
   planDir: string,
   taskId: string,
   status: TaskStatus,
   notes?: string,
-): Effect.Effect<UpdatedTaskResult, WriteFlowError | TaskNotFound, FileSystem> {
-  return Effect.gen(function* () {
-    const snapshot = yield* readTasksJsonl(planDir);
-    if (!snapshot) return yield* Effect.fail(new TasksFileNotFound({ planDir }));
+): Effect.Effect<
+  UpdatedTaskResult,
+  WriteFlowError | TaskNotFound | InvalidTaskTransition,
+  FileSystem
+> {
+  return withTasksLock(
+    planDir,
+    Effect.gen(function* () {
+      const snapshot = yield* readTasksJsonl(planDir);
+      if (!snapshot) return yield* Effect.fail(new TasksFileNotFound({ planDir }));
 
-    const task = snapshot.tasks.find((t) => t.id === taskId);
-    if (!task) return yield* Effect.fail(new TaskNotFound({ planDir, taskId }));
+      const task = snapshot.tasks.find((t) => t.id === taskId);
+      if (!task) return yield* Effect.fail(new TaskNotFound({ planDir, taskId }));
 
-    task.status = status;
-    task.updated_at = new Date().toISOString();
-    if (notes) task.notes = notes;
+      if (!canTransition(taskMachine, task.status, status, "update")) {
+        return yield* Effect.fail(
+          new InvalidTaskTransition({
+            taskId,
+            from: task.status,
+            to: status,
+            allowed: nextStates(taskMachine, task.status, "update"),
+          }),
+        );
+      }
 
-    yield* writeTasksJsonl(planDir, snapshot.meta, snapshot.tasks);
-    yield* reconcileFromTasks(snapshot.meta.plan_name, snapshot.tasks, snapshot.meta.title);
-    return { task, finalizable: isPlanFinalizable(snapshot.tasks) };
-  });
+      task.status = status;
+      task.updated_at = new Date().toISOString();
+      if (notes !== undefined) task.notes = notes;
+
+      yield* writeTasksJsonl(planDir, snapshot.meta, snapshot.tasks);
+      yield* reconcileFromTasks(snapshot.meta.plan_name, snapshot.tasks, snapshot.meta.title);
+      return { task, finalizable: isPlanFinalizable(snapshot.tasks) };
+    }),
+  );
 }
 
 export interface AddTaskInput {
@@ -78,33 +100,37 @@ export interface AddTaskInput {
 /**
  * Append a discovered follow-up as a `deferred` task, persist, then re-project
  * registry status (a new deferred task can re-open a done plan). Mirrors the
- * extension's `add_task` + `onTaskAdded`.
+ * extension's `add_task` + `onTaskAdded`. Runs under the plan's tasks lock so
+ * concurrent appends cannot duplicate ids or drop a task.
  */
 export function appendDeferredTask(
   planDir: string,
   input: AddTaskInput,
 ): Effect.Effect<TaskRecord, WriteFlowError, FileSystem> {
-  return Effect.gen(function* () {
-    const snapshot = yield* readTasksJsonl(planDir);
-    if (!snapshot) return yield* Effect.fail(new TasksFileNotFound({ planDir }));
+  return withTasksLock(
+    planDir,
+    Effect.gen(function* () {
+      const snapshot = yield* readTasksJsonl(planDir);
+      if (!snapshot) return yield* Effect.fail(new TasksFileNotFound({ planDir }));
 
-    const now = new Date().toISOString();
-    const task: TaskRecord = {
-      _type: "task",
-      id: nextTaskId(snapshot.tasks.map((t) => t.id)),
-      description: input.description.slice(0, 60),
-      details: input.details ?? "",
-      status: "deferred",
-      origin: "discovered",
-      depends_on: input.depends_on,
-      notes: input.reason,
-      created_at: now,
-      updated_at: now,
-    };
-    snapshot.tasks.push(task);
+      const now = new Date().toISOString();
+      const task: TaskRecord = {
+        _type: "task",
+        id: nextTaskId(snapshot.tasks.map((t) => t.id)),
+        description: input.description.slice(0, 60),
+        details: input.details ?? "",
+        status: "deferred",
+        origin: "discovered",
+        depends_on: input.depends_on,
+        notes: input.reason,
+        created_at: now,
+        updated_at: now,
+      };
+      snapshot.tasks.push(task);
 
-    yield* writeTasksJsonl(planDir, snapshot.meta, snapshot.tasks);
-    yield* reconcileFromTasks(snapshot.meta.plan_name, snapshot.tasks, snapshot.meta.title);
-    return task;
-  });
+      yield* writeTasksJsonl(planDir, snapshot.meta, snapshot.tasks);
+      yield* reconcileFromTasks(snapshot.meta.plan_name, snapshot.tasks, snapshot.meta.title);
+      return task;
+    }),
+  );
 }
