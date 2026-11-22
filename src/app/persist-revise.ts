@@ -14,12 +14,13 @@ export function persistRevisedPlan(args: {
   planDir: string;
   plan: PlanData;
   title: string;
+  overview?: string;
   tasks: TaskRecord[];
   initiative?: string;
   dependsOnPlans?: string[];
   now: string;
 }): Effect.Effect<void, unknown, FileSystem> {
-  const { planDir, plan, title, tasks, initiative, dependsOnPlans, now } = args;
+  const { planDir, plan, title, overview, tasks, initiative, dependsOnPlans, now } = args;
   const meta: TaskMeta = {
     _type: "meta",
     title,
@@ -34,6 +35,7 @@ export function persistRevisedPlan(args: {
     yield* upsertPlanEntry(plan.planName, {
       status: current?.status ?? "in-progress",
       title,
+      overview,
       initiative,
       depends_on: dependsOnPlans,
     });

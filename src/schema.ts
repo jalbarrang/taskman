@@ -57,6 +57,12 @@ export const PlanManifestEntrySchema = Schema.Struct({
   completed_at: Schema.NullOr(Schema.String),
   /** Optional human-readable reason, used for terminal statuses. */
   reason: Schema.optional(Schema.String),
+  /**
+   * Optional plan-level narrative (markdown): the goal, approach, constraints
+   * and gotchas an executor needs before touching tasks. Absent = no overview.
+   * Replaces the removed HANDOFF.md as the one place plan intent lives.
+   */
+  overview: Schema.optional(Schema.String),
   /** Parent initiative name (kebab). Absent = standalone flat plan. */
   initiative: Schema.optional(Schema.String),
   /**

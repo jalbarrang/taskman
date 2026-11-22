@@ -18,8 +18,12 @@ export async function statusCommand(opts: { plan?: string; json?: boolean }): Pr
   const lines = plan.tasks.map(
     (task) => `  ${STATUS_GLYPH[task.status]} ${task.id} [${task.status}] ${task.description}`,
   );
+  // The overview is plain markdown; print it raw between header and progress so
+  // an agent reading status gets the plan's intent, not just its task list.
+  const overviewBlock = plan.overview ? `${plan.overview.trim()}\n\n` : "";
   const human =
     `Plan: ${plan.title} (${plan.planName})\n` +
+    overviewBlock +
     `Progress: ${resolved}/${plan.tasks.length} resolved — ${parts.join(", ")}\n` +
     `Tasks:\n${lines.join("\n")}`;
   emit(
@@ -28,6 +32,7 @@ export async function statusCommand(opts: { plan?: string; json?: boolean }): Pr
       active: true,
       plan_name: plan.planName,
       title: plan.title,
+      overview: plan.overview ?? null,
       total: plan.tasks.length,
       counts: plan.counts as Record<TaskStatus, number>,
       task_ids: plan.tasks.map((task) => task.id),

@@ -1,5 +1,7 @@
+import { Effect } from "effect";
 import { join } from "node:path";
 import { loadPlanData } from "../resolve.js";
+import { readPlansManifest } from "../storage/plans-manifest.js";
 import { isPlanFinalizable } from "../task-status.js";
 import type { TaskRecord, TaskStatus } from "../types.js";
 import { AppError } from "./errors.js";
@@ -9,6 +11,8 @@ import { requirePlan } from "./resolve-plan.js";
 export interface PlanStatusView {
   planName: string;
   title: string;
+  /** Plan-level narrative from the registry row; absent when the plan has none. */
+  overview?: string;
   tasks: TaskRecord[];
   counts: Record<TaskStatus, number>;
   finalizable: boolean;
@@ -20,7 +24,9 @@ export async function getPlanStatus(
   input: { plan?: string } = {},
 ): Promise<PlanStatusView> {
   const { planName, planDir } = await requirePlan(context, input.plan);
-  const plan = await context.run(loadPlanData(planDir));
+  const [plan, entries] = await context.run(
+    Effect.all([loadPlanData(planDir), readPlansManifest()]),
+  );
   if (!plan) {
     throw new AppError(
       "PLAN_NOT_FOUND",
@@ -38,6 +44,7 @@ export async function getPlanStatus(
   return {
     planName: plan.planName,
     title: plan.title,
+    overview: entries.find((entry) => entry.name === planName)?.overview,
     tasks: plan.tasks,
     counts,
     finalizable: isPlanFinalizable(plan.tasks),

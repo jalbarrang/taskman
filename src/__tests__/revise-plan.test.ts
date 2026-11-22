@@ -4,7 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { makePlanRuntime } from "../effects/runtime.js";
-import { upsertPlanEntry } from "../storage/plans-manifest.js";
+import { readPlansManifest, upsertPlanEntry } from "../storage/plans-manifest.js";
 import { writeTasksJsonl, readTasksJsonl } from "../storage/task-storage.js";
 import type { TaskMeta, TaskRecord } from "../types.js";
 import { revisePlanCommand } from "../cli/commands/revise-plan.js";
@@ -81,6 +81,22 @@ describe("revise-plan", () => {
     const snap = await run(readTasksJsonl("p"));
     expect(snap?.tasks).toHaveLength(2);
     expect(snap?.tasks.find((t) => t.id === "t-001")?.notes).toBe("x");
+  });
+
+  test("sets, preserves, and clears the plan overview", async () => {
+    await revisePlanCommand({ plan: "p", overview: "## Goal\nShip it" });
+    let [entry] = await run(readPlansManifest());
+    expect(entry?.overview).toBe("## Goal\nShip it");
+
+    // Omitted overview is preserved, like every other revise field.
+    await revisePlanCommand({ plan: "p", title: "Title Only" });
+    [entry] = await run(readPlansManifest());
+    expect(entry?.overview).toBe("## Goal\nShip it");
+
+    // An empty string is the documented way to clear it.
+    await revisePlanCommand({ plan: "p", overview: "" });
+    [entry] = await run(readPlansManifest());
+    expect(entry?.overview).toBeUndefined();
   });
 
   test("errors clearly when the plan is unknown", async () => {

@@ -33,6 +33,7 @@ export function registerStatus(server: McpServer, context: McpContext): void {
           plan: {
             name: view.planName,
             title: view.title,
+            overview: view.overview,
             base_commit: view.baseCommit,
             tasks: view.tasks,
             counts: view.counts,

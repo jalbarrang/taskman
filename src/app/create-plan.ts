@@ -13,6 +13,8 @@ export interface CreatePlanInput {
   /** Defaults to a kebab-case of `title`. */
   name?: string;
   title: string;
+  /** Plan-level narrative markdown an executor reads before starting. */
+  overview?: string;
   tasks: CreateTaskInput[];
   initiative?: string;
   dependsOnPlans?: string[];
@@ -51,6 +53,7 @@ export async function createPlan(
       yield* upsertPlanEntry(planName, {
         status: "in-progress",
         title: input.title,
+        overview: input.overview,
         initiative,
         depends_on: dependsOnPlans,
       });

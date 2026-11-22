@@ -11,6 +11,8 @@ import { requirePlan } from "./resolve-plan.js";
 export interface RevisePlanInput {
   plan: string;
   title?: string;
+  /** Replaces the plan overview; omit to preserve, `""` to clear. */
+  overview?: string;
   tasks?: ReviseTaskInput[];
   initiative?: string;
   dependsOnPlans?: string[];
@@ -44,6 +46,7 @@ export async function revisePlan(
       planDir,
       plan,
       title,
+      overview: input.overview,
       tasks,
       initiative: input.initiative ? toKebabCase(input.initiative) : undefined,
       dependsOnPlans: input.dependsOnPlans?.map(toKebabCase).filter(Boolean),
@@ -52,6 +55,7 @@ export async function revisePlan(
   );
   const changed = [
     input.title !== undefined ? "title" : undefined,
+    input.overview !== undefined ? "overview" : undefined,
     input.tasks !== undefined ? "tasks" : undefined,
   ].filter((value): value is string => value !== undefined);
   return { planName, planDir, title, tasks, changed };

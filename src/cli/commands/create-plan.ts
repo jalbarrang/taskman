@@ -9,6 +9,8 @@ import { emit } from "../format.js";
 export async function createPlanCommand(opts: {
   name?: string;
   title?: string;
+  overview?: string;
+  overviewFile?: string;
   tasks?: string;
   tasksFile?: string;
   initiative?: string;
@@ -16,10 +18,14 @@ export async function createPlanCommand(opts: {
   json?: boolean;
 }): Promise<void> {
   if (!opts.title) throw new CliError("--title is required.");
-  const tasksRaw = await resolveOptionalContent(opts.tasks, opts.tasksFile, "tasks");
+  const [tasksRaw, overview] = await Promise.all([
+    resolveOptionalContent(opts.tasks, opts.tasksFile, "tasks"),
+    resolveOptionalContent(opts.overview, opts.overviewFile, "overview"),
+  ]);
   const result = await createPlan(getAppContext(), {
     name: opts.name,
     title: opts.title,
+    overview,
     tasks: tasksRaw === undefined ? [] : parseCreateTasks(tasksRaw),
     initiative: opts.initiative,
     dependsOnPlans: opts.dependsOn ? parseDependsOn(opts.dependsOn) : undefined,
@@ -38,6 +44,7 @@ export async function createPlanCommand(opts: {
       plan_dir: displayPath(result.planDir),
       task_count: result.taskIds.length,
       task_ids: result.taskIds,
+      overview: overview ?? null,
       initiative: result.initiative ?? null,
       depends_on: result.dependsOnPlans ?? null,
       unknown_initiative: result.unknownInitiative,

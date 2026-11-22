@@ -4,6 +4,7 @@ import { bareName, reviseTaskInput, taskInput } from "./common.js";
 export const createPlanInput = z.object({
   name: bareName.optional(),
   title: z.string().min(1),
+  overview: z.string().optional(),
   tasks: z.array(taskInput).optional(),
   initiative: bareName.optional(),
   depends_on_plans: z.array(bareName).optional(),
@@ -20,6 +21,8 @@ export const createPlanOutput = z.object({
 export const revisePlanInput = z.object({
   plan: bareName,
   title: z.string().min(1).optional(),
+  /** Omit to preserve; empty string clears. */
+  overview: z.string().optional(),
   tasks: z.array(reviseTaskInput).min(1).optional(),
   initiative: bareName.optional(),
   depends_on_plans: z.array(bareName).optional(),

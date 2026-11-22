@@ -49,6 +49,28 @@ describe("application status and root binding", () => {
     });
   });
 
+  test("surfaces the plan overview from the registry row", async () => {
+    dir = await mkdtemp(join(tmpdir(), "taskman-app-"));
+    const context = makeAppContext(dir);
+    await context.run(
+      upsertPlanEntry("with-overview", {
+        status: "in-progress",
+        title: "With Overview",
+        overview: "Constraint: no schema changes.",
+      }),
+    );
+    await context.run(writeTasksJsonl("with-overview", meta("with-overview"), [task]));
+    expect((await getPlanStatus(context)).overview).toBe("Constraint: no schema changes.");
+  });
+
+  test("omits the overview when the plan has none", async () => {
+    dir = await mkdtemp(join(tmpdir(), "taskman-app-"));
+    const context = makeAppContext(dir);
+    await context.run(upsertPlanEntry("bare", { status: "in-progress", title: "Bare" }));
+    await context.run(writeTasksJsonl("bare", meta("bare"), [task]));
+    expect((await getPlanStatus(context)).overview).toBeUndefined();
+  });
+
   test("returns read candidates and rejects an ambiguous strict resolution", async () => {
     dir = await mkdtemp(join(tmpdir(), "taskman-app-"));
     const context = makeAppContext(dir);

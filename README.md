@@ -19,7 +19,10 @@ a different agent, or as a library.
 Everything lives under the plans root — `.taskman/plans/` in the current
 working directory by default:
 
-- `<root>/plans.jsonl` — the plan registry.
+- `<root>/plans.jsonl` — the plan registry. Each row carries the plan `title`
+  plus an optional `overview`: markdown holding the plan's goal, approach, and
+  constraints. It is the one place plan-level intent lives, and `status`
+  prints it before the task list.
 - `<root>/initiatives.jsonl` — the initiative registry (initiatives group plans).
 - `<root>/<plan>/tasks.jsonl` — one plan's task list (first line is metadata).
 - `<root>/<initiative>/INITIATIVE.md` — the initiative overview.
@@ -67,13 +70,15 @@ and accepts `--json` for machine consumption.
 Create a plan from any harness (tasks accept an inline value or a `--tasks-file <path>`, where `-` reads stdin):
 
 ```bash
-taskman create-plan --name my-plan --title "My Plan" \
+taskman create-plan --name my-plan --title "My Plan" --overview-file OVERVIEW.md \
   --tasks '[{"description":"do it"}]'
 taskman revise-plan --plan my-plan --tasks-file TASKS.json   # rewrite the task list
 ```
 
 `--name` is optional (it defaults to a kebab-case of `--title`), and omitting
-`--tasks` creates an empty project you can fill with `add-task`.
+`--tasks` creates an empty project you can fill with `add-task`. `--overview
+<text>` / `--overview-file <path>` records what the plan is actually for; an
+executor reading `taskman status` gets it without opening any file.
 
 Create an initiative, then link member plans; revise a plan in place when follow-up changes arrive (omitted fields stay as-is; matching task ids keep status/notes):
 
@@ -113,7 +118,7 @@ It speaks MCP revision `2026-07-28` (stateless per-request envelopes and `server
 
 The server exposes these eight tools:
 
-- `taskman_status` resolves and inspects a plan, including tasks and finalizability.
+- `taskman_status` resolves and inspects a plan, including its overview, tasks and finalizability.
 - `taskman_list` lists plans or initiatives with filters and sorting.
 - `taskman_create_plan` creates or replaces a plan with its tasks.
 - `taskman_revise_plan` updates a plan while preserving matching task state.

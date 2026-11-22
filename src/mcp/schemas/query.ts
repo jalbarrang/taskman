@@ -12,6 +12,7 @@ export const statusOutput = z.object({
     .object({
       name: z.string(),
       title: z.string(),
+      overview: z.string().optional(),
       base_commit: z.string().optional(),
       tasks: z.array(taskRecord),
       counts: z.object({

@@ -15,6 +15,7 @@ describe("MCP plan tools", () => {
         arguments: {
           name: "beta",
           title: "Beta",
+          overview: "Ship beta behind a flag.",
           tasks: [{ description: "write beta" }],
         },
       }),
@@ -40,8 +41,26 @@ describe("MCP plan tools", () => {
     expect(status).toMatchObject({
       resolved: true,
       ledger: { source: "default" },
-      plan: { name: "beta", tasks: [{ id: "t-001" }] },
+      plan: {
+        name: "beta",
+        overview: "Ship beta behind a flag.",
+        tasks: [{ id: "t-001" }],
+      },
     });
+    // Omitted overview preserved by the revise above; empty string clears it.
+    content(
+      await fixture.client.callTool({
+        name: "taskman_revise_plan",
+        arguments: { plan: "beta", overview: "" },
+      }),
+    );
+    const cleared = content(
+      await fixture.client.callTool({
+        name: "taskman_status",
+        arguments: { plan: "beta" },
+      }),
+    );
+    expect((cleared.plan as Record<string, unknown>).overview).toBeUndefined();
     const list = content(
       await fixture.client.callTool({
         name: "taskman_list",

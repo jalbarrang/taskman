@@ -28,6 +28,11 @@ export interface PlanManifestEntry {
   created_at: string;
   completed_at: string | null;
   reason?: string;
+  /**
+   * Plan-level narrative (markdown) an executor reads before starting: goal,
+   * approach, constraints, how to verify. Replaces the removed HANDOFF.md.
+   */
+  overview?: string;
   /** Parent initiative name (kebab). Absent = standalone flat plan. */
   initiative?: string;
   /** Plan-level dependencies (plan names). Cross-initiative allowed. */
@@ -86,6 +91,8 @@ export interface PlanUpsert {
   status: PlanStatus;
   title?: string;
   reason?: string;
+  /** Plan-level narrative markdown; preserved when omitted, `""` clears it. */
+  overview?: string;
   /** Parent initiative name; preserved when omitted. */
   initiative?: string;
   /** Plan-level dependencies (plan names); preserved when omitted. */
@@ -106,6 +113,8 @@ export function applyPlanUpsert(
   const now = new Date().toISOString();
   const index = entries.findIndex((entry) => entry.name === name);
   const existing = index === -1 ? undefined : entries[index];
+  // `""` is the documented way to clear an overview, so empty never persists.
+  const overview = updates.overview ?? existing?.overview;
   const entry: PlanManifestEntry = {
     _type: "plan",
     name,
@@ -115,6 +124,7 @@ export function applyPlanUpsert(
     // Terminal statuses record a completion timestamp; reopening clears it.
     completed_at: isTerminalStatus(updates.status) ? (existing?.completed_at ?? now) : null,
     reason: updates.reason ?? existing?.reason,
+    ...(overview ? { overview } : {}),
     // Membership + plan-level deps are preserved across status-only upserts.
     initiative: updates.initiative ?? existing?.initiative,
     depends_on: updates.depends_on ?? existing?.depends_on,

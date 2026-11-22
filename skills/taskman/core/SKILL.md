@@ -41,7 +41,8 @@ three invariants that decide whether a command does what you expect.
 Everything is plain JSONL/Markdown under the plans root — `.taskman/plans/` in
 the current directory by default:
 
-- `<root>/plans.jsonl` — plan registry
+- `<root>/plans.jsonl` — plan registry (each row carries `title` and an optional
+  `overview`: markdown for the plan's goal, approach, and constraints)
 - `<root>/initiatives.jsonl` — initiative registry (initiatives group plans)
 - `<root>/<plan>/tasks.jsonl` — one plan's tasks (first line is metadata)
 - `<root>/<initiative>/INITIATIVE.md` — the initiative overview
@@ -72,11 +73,14 @@ ledger folder. Resolution is cwd-only (no walk-up, no env var). Run
 ### Execution loop
 
 ```bash
-taskman status                  # active plan + task ids/statuses
+taskman status                  # active plan + overview + task ids/statuses
 taskman update-task t-003 done  # mark progress; plan status re-derived
 taskman add-task "handle empty input" --reason "found gap while implementing"
 taskman reconcile --apply       # repair safe (in-progress→done) drift
 ```
+
+`status` prints the plan's `overview` between the header and the progress line
+when one is set, so an executor sees plan intent before the task list.
 
 ### Creating plans from any harness
 
@@ -87,12 +91,17 @@ can seed the ledger directly. Task payloads accept an inline value or a
 
 ```bash
 taskman create-plan --name my-plan --title "My Plan" \
+  --overview-file OVERVIEW.md \
   --tasks '[{"description":"do it"}]'   # tasks get t-NNN ids
 taskman revise-plan --plan my-plan --tasks-file TASKS.json   # rewrite the task list
 ```
 
 `--name` is optional (it defaults to a kebab-case of `--title`), and omitting
-`--tasks` creates an empty project you can fill with `add-task`.
+`--tasks` creates an empty project you can fill with `add-task`. Pass the plan's
+intent once via `--overview <text>` or `--overview-file <path>` (`-` is stdin):
+it is stored on the registry row and surfaced by `status`, which is the only
+plan-level narrative an executor needs before touching tasks. `revise-plan`
+replaces it when given, preserves it when omitted, and clears it on `""`.
 
 Use `--initiative <name>` to link the plan (create the initiative first) and
 `--depends-on a,b` for plan-level ordering. Task creation here is plan setup —
@@ -103,7 +112,7 @@ distinct from `add-task`, which records a *deferred* follow-up (see below).
 Every command prints human text by default and accepts `--json`:
 
 ```bash
-taskman status --json   # { active, plan_name, title, total, counts, task_ids }
+taskman status --json   # { active, plan_name, title, overview, total, counts, task_ids }
 taskman list --json     # array of plan items
 ```
 

@@ -87,6 +87,21 @@ describe("plans.jsonl manifest", () => {
     expect(entry.status).toBe("in-progress");
     expect(entry.completed_at).toBeNull();
   });
+
+  test("keeps the plan overview across status upserts and clears it on empty", async () => {
+    await run(upsertPlanEntry("p", { status: "in-progress", title: "P", overview: "## Goal\nShip it" }));
+    let [entry] = await run(readPlansManifest());
+    expect(entry.overview).toBe("## Goal\nShip it");
+
+    // A status-only upsert (reconcile/close) must not drop the narrative.
+    await run(upsertPlanEntry("p", { status: "done" }));
+    [entry] = await run(readPlansManifest());
+    expect(entry.overview).toBe("## Goal\nShip it");
+
+    await run(upsertPlanEntry("p", { status: "done", overview: "" }));
+    [entry] = await run(readPlansManifest());
+    expect(entry.overview).toBeUndefined();
+  });
 });
 
 describe("reconcilePlanStatus (registry as a projection of task state)", () => {

@@ -4,7 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { makePlanRuntime } from "../effects/runtime.js";
-import { upsertPlanEntry } from "../storage/plans-manifest.js";
+import { readPlansManifest, upsertPlanEntry } from "../storage/plans-manifest.js";
 import { writeTasksJsonl } from "../storage/task-storage.js";
 import type { TaskMeta, TaskRecord } from "../types.js";
 import { statusCommand } from "../cli/commands/status.js";
@@ -73,6 +73,24 @@ describe("status", () => {
 
   test("errors clearly when plan missing", async () => {
     await expect(statusCommand({ plan: "ghost" })).rejects.toBeInstanceOf(CliError);
+  });
+
+  test("includes the plan overview in json and human output", async () => {
+    await run(
+      upsertPlanEntry("p", {
+        status: "in-progress",
+        title: "Title p",
+        overview: "Constraint: keep it small.",
+      }),
+    );
+    const json = JSON.parse(await capture(() => statusCommand({ json: true })));
+    expect(json.overview).toBe("Constraint: keep it small.");
+    expect(await capture(() => statusCommand({}))).toContain("Constraint: keep it small.");
+  });
+
+  test("reports overview as null when the plan has none", async () => {
+    const json = JSON.parse(await capture(() => statusCommand({ json: true })));
+    expect(json.overview).toBeNull();
   });
 });
 
@@ -154,6 +172,15 @@ describe("create-plan", () => {
     await expect(
       createPlanCommand({ name: "x", title: "X", tasks: "not json" }),
     ).rejects.toBeInstanceOf(CliError);
+  });
+
+  test("stores the overview on the registry row", async () => {
+    const out = await capture(() =>
+      createPlanCommand({ name: "ov", title: "OV", overview: "## Goal\nShip", json: true }),
+    );
+    expect(JSON.parse(out).overview).toBe("## Goal\nShip");
+    const entry = (await run(readPlansManifest())).find((plan) => plan.name === "ov");
+    expect(entry?.overview).toBe("## Goal\nShip");
   });
 
   test("requires a title", async () => {
