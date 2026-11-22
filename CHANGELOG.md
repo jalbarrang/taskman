@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/jalbarrang/taskman/compare/v0.9.0...v0.10.0) (2026-11-22)
+
+
+### Features
+
+* **plans:** record plan overview on the registry row ([b8e77b1](https://github.com/jalbarrang/taskman/commit/b8e77b1b557e18abd557a463f1ee28b37c87465d))
+
 ## [0.9.0](https://github.com/jalbarrang/taskman/compare/v0.8.0...v0.9.0) (2026-11-15)
 
 
